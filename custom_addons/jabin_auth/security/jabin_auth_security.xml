@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  JABIN Auth - Access Rights (Sprint 2)
+
+  This file declares access rights (ir.model.access) for the models
+  introduced by this module:
+    - jabin.refresh.token       (refresh-token revocation registry)
+    - jabin.password.service    (AbstractModel, service locator)
+    - jabin.token.service       (AbstractModel, service locator)
+    - jabin.auth.service        (AbstractModel, service locator)
+
+  Access-right philosophy:
+  * The refresh-token registry is security-sensitive. Full CRUD is granted
+    only to the JABIN Security Administrator group (defined by
+    jabin_security). Authenticated users get read access so that the
+    token service can look up and revoke their own tokens during normal
+    request flow (Odoo access checks run on the request user).
+  * Service AbstractModels have no database table, so they receive a
+    read-only access record purely to satisfy the Odoo registry (an
+    AbstractModel without an access record triggers a warning at install
+    time). These records carry no group so they apply globally.
+
+  Notes
+  ~~~~~
+  * We intentionally do NOT define a new group here. The JABIN Security
+    Administrator group (jabin_security_admin_group) and the JABIN User
+    Manager group (jabin_user_manager_group) are defined by the
+    jabin_security and jabin_users modules respectively and are reused.
+  * Authentication endpoints themselves run with auth="none" or
+    auth_required (custom decorator). The decorator validates JWTs and
+    builds a SecurityContext; the underlying ORM calls are made using
+    Odoo's standard request environment which respects these access
+    rights.
+-->
+<odoo>
+    <data>
+
+        <!-- ============================================================== -->
+        <!-- Access rights: jabin.refresh.token                             -->
+        <!-- ============================================================== -->
+
+        <!-- Security admin: full CRUD over the refresh-token registry. -->
+        <record id="jabin_refresh_token_access_admin" model="ir.model.access">
+            <field name="name">jabin.refresh.token: admin full access</field>
+            <field name="model_id" ref="model_jabin_refresh_token"/>
+            <field name="group_id" ref="jabin_security.jabin_security_admin_group"/>
+            <field name="perm_read" eval="1"/>
+            <field name="perm_write" eval="1"/>
+            <field name="perm_create" eval="1"/>
+            <field name="perm_unlink" eval="1"/>
+        </record>
+
+        <!-- Authenticated users: read access so the token service can
+             inspect and revoke their own refresh tokens during refresh /
+             logout flows. Write/create/unlink remain restricted to the
+             admin group; the service layer uses sudo() for registry
+             mutations when necessary. -->
+        <record id="jabin_refresh_token_access_user_read" model="ir.model.access">
+            <field name="name">jabin.refresh.token: user read</field>
+            <field name="model_id" ref="model_jabin_refresh_token"/>
+            <field name="group_id" ref="base.group_user"/>
+            <field name="perm_read" eval="1"/>
+            <field name="perm_write" eval="0"/>
+            <field name="perm_create" eval="0"/>
+            <field name="perm_unlink" eval="0"/>
+        </record>
+
+        <!-- ============================================================== -->
+        <!-- Access rights: jabin.password.service (AbstractModel, no table)-->
+        <!-- ============================================================== -->
+        <record id="jabin_password_service_access" model="ir.model.access">
+            <field name="name">jabin.password.service: no-table access</field>
+            <field name="model_id" ref="model_jabin_password_service"/>
+            <field name="perm_read" eval="1"/>
+            <field name="perm_write" eval="0"/>
+            <field name="perm_create" eval="0"/>
+            <field name="perm_unlink" eval="0"/>
+        </record>
+
+        <!-- ============================================================== -->
+        <!-- Access rights: jabin.token.service (AbstractModel, no table)   -->
+        <!-- ============================================================== -->
+        <record id="jabin_token_service_access" model="ir.model.access">
+            <field name="name">jabin.token.service: no-table access</field>
+            <field name="model_id" ref="model_jabin_token_service"/>
+            <field name="perm_read" eval="1"/>
+            <field name="perm_write" eval="0"/>
+            <field name="perm_create" eval="0"/>
+            <field name="perm_unlink" eval="0"/>
+        </record>
+
+        <!-- ============================================================== -->
+        <!-- Access rights: jabin.auth.service (AbstractModel, no table)    -->
+        <!-- ============================================================== -->
+        <record id="jabin_auth_service_access" model="ir.model.access">
+            <field name="name">jabin.auth.service: no-table access</field>
+            <field name="model_id" ref="model_jabin_auth_service"/>
+            <field name="perm_read" eval="1"/>
+            <field name="perm_write" eval="0"/>
+            <field name="perm_create" eval="0"/>
+            <field name="perm_unlink" eval="0"/>
+        </record>
+
+    </data>
+</odoo>
