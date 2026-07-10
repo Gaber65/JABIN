@@ -1,1 +1,2 @@
-from .jabin_refresh_token import JabinRefreshToken
+from . import jabin_otp
+from . import jabin_refresh_token
