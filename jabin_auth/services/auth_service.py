@@ -9,7 +9,6 @@ from odoo.addons.jabin_security.utils.security_context import SecurityContext
 _logger = JabinLogger.get('auth.service')
 _PROFILE_UPDATE_FIELDS = {'name', 'phone', 'avatar'}
 
-
 class AuthService(models.AbstractModel):
     _name = 'jabin.auth.service'
     _description = 'JABIN Auth Service'
@@ -53,44 +52,29 @@ class AuthService(models.AbstractModel):
 
     @api.model
     def login_with_otp(self, email: str) -> str:
-        """New: Send login OTP to existing user.
-
-        Args:
-            email: User's email address
-
-        Returns:
-            Success message
-
-        Raises:
-            ValidationError: If user doesn't exist or account is not active
-        """
+        """New: Send login OTP to existing user."""
         if not email:
             raise ValidationError('Email is required.')
 
         email = email.strip().lower()
 
-        # Find user by email
-        User = self.env['res.users']
+        # ✅ FIXED: Added .sudo()
+        User = self.env['res.users'].sudo()
         user = User.find_by_login(email)
 
         if not user:
             _logger.audit('Login OTP failed: user not found for email=%s', email,
                           extra={'email': email, 'action': 'login_otp_no_user'})
-            # Don't reveal that user doesn't exist for security
             return "Verification code sent successfully"
 
-        # Check account status
         status = getattr(user, 'x_status', None)
         if status not in ('active',):
             _logger.audit('Login OTP blocked: user=%s status=%s', user.id, status,
                           extra={'user_id': user.id, 'action': 'login_otp_blocked_status'})
-            # For pending users, allow OTP to be sent (they can verify registration)
             if status == 'pending':
-                # This is a registration OTP request
                 return self._send_registration_otp(email, user.id)
             raise ValidationError('Account is not active. Please contact support.')
 
-        # Generate and send OTP
         otp_service = self.env['jabin.otp.service']
         plain_code = otp_service.create_and_send_otp(
             email=email,
@@ -98,7 +82,6 @@ class AuthService(models.AbstractModel):
             user_id=user.id
         )
 
-        # Log the login attempt
         try:
             self.env['jabin.audit.service'].log_login(user_id=user.id, success=True, login=email)
         except Exception:
@@ -106,34 +89,21 @@ class AuthService(models.AbstractModel):
 
         _logger.audit('Login OTP sent: user=%s email=%s', user.id, email,
                       extra={'user_id': user.id, 'action': 'login_otp_sent'})
-
         return "Verification code sent successfully"
 
     @api.model
     def verify_login_otp(self, email: str, code: str) -> Dict[str, Any]:
-        """Verify login OTP and return tokens.
-
-        Args:
-            email: User's email address
-            code: The OTP code
-
-        Returns:
-            Dictionary with access_token, refresh_token, and token_type
-
-        Raises:
-            ValidationError: If verification fails
-        """
+        """Verify login OTP and return tokens."""
         if not email or not code:
             raise ValidationError('Email and verification code are required.')
 
         email = email.strip().lower()
 
-        # Verify OTP
         otp_service = self.env['jabin.otp.service']
         if not otp_service.verify_otp(email, code, 'login'):
-            # Log failed attempt
             try:
-                user = self.env['res.users'].find_by_login(email)
+                # ✅ FIXED: Added .sudo()
+                user = self.env['res.users'].sudo().find_by_login(email)
                 user_id = user.id if user else None
                 self.env['jabin.audit.service'].log_login(user_id=user_id, success=False, login=email)
             except Exception:
@@ -143,29 +113,25 @@ class AuthService(models.AbstractModel):
                           extra={'email': email, 'action': 'login_otp_verify_failed'})
             raise ValidationError('Invalid verification code.')
 
-        # Find user
-        User = self.env['res.users']
+        # ✅ FIXED: Added .sudo()
+        User = self.env['res.users'].sudo()
         user = User.find_by_login(email)
 
         if not user:
             raise ValidationError('User not found.')
 
-        # Check account status
         status = getattr(user, 'x_status', None)
         if status != 'active':
             raise ValidationError('Account is not active.')
 
-        # Generate tokens
         user_type = getattr(user, 'x_user_type', None) or 'customer'
         tokens = self.env['jabin.token.service'].issue_pair(user.id, user_type, email)
 
-        # Update last login
         try:
             user.sudo().write({'x_last_login': fields.Datetime.now()})
         except Exception:
             pass
 
-        # Log successful login
         try:
             self.env['jabin.audit.service'].log_login(user_id=user.id, success=True, login=email)
         except Exception:
@@ -183,51 +149,38 @@ class AuthService(models.AbstractModel):
 
     @api.model
     def register(self, email: str) -> str:
-        """Register a new user with email only. Creates user with pending_verification status.
-
-        Args:
-            email: User's email address
-
-        Returns:
-            Success message
-
-        Raises:
-            ValidationError: If email is invalid or already registered
-        """
+        """Register a new user with email only."""
         if not email:
             raise ValidationError('Email is required.')
 
-        # Validate email
         vr = EmailValidator.validate(email, field='email')
         if not vr.ok:
             raise ValidationError('\n'.join((e.message for e in vr.errors)))
 
         email = email.strip().lower()
 
-        # Check if email already exists
-        User = self.env['res.users']
+        # ✅ FIXED: Added .sudo()
+        User = self.env['res.users'].sudo()
         existing_user = User.find_by_login(email)
 
         if existing_user:
-            # Check if user is already active
             status = getattr(existing_user, 'x_status', None)
             if status == 'active':
                 raise ValidationError('Email already registered and verified.')
             elif status == 'pending':
-                # User exists but not verified - resend OTP
                 return self._send_registration_otp(email, existing_user.id)
             else:
-                # Inactive/suspended user - allow re-registration
                 pass
 
-        # Create new user with pending status
-        user_type = 'customer'  # Default user type
+        user_type = 'customer'
         user_data = {
             'login': email,
-            'name': email,  # Use email as name initially
+            'name': email,
+            'company_id': self.env.company.id,
+            'company_ids': [(4, self.env.company.id)],
             'x_user_type': user_type,
             'x_status': 'pending',
-            'password': '',  # No password required
+            'password': '',
         }
 
         try:
@@ -238,20 +191,11 @@ class AuthService(models.AbstractModel):
             _logger.error('Failed to create user: %s', exc)
             raise ValidationError(f'Failed to create user: {exc}')
 
-        # Send registration OTP
         return self._send_registration_otp(email, user.id)
 
     @api.model
     def _send_registration_otp(self, email: str, user_id: int) -> str:
-        """Send registration OTP to user.
-
-        Args:
-            email: User's email address
-            user_id: User ID
-
-        Returns:
-            Success message
-        """
+        """Send registration OTP to user."""
         otp_service = self.env['jabin.otp.service']
         plain_code = otp_service.create_and_send_otp(
             email=email,
@@ -261,43 +205,29 @@ class AuthService(models.AbstractModel):
 
         _logger.audit('Registration OTP sent: user=%s email=%s', user_id, email,
                       extra={'user_id': user_id, 'email': email, 'action': 'registration_otp_sent'})
-
         return "Verification code sent successfully"
 
     @api.model
     def verify_registration_otp(self, email: str, code: str) -> Dict[str, Any]:
-        """Verify registration OTP and activate user account.
-
-        Args:
-            email: User's email address
-            code: The OTP code
-
-        Returns:
-            Dictionary with success status, tokens, and message
-
-        Raises:
-            ValidationError: If verification fails
-        """
+        """Verify registration OTP and activate user account."""
         if not email or not code:
             raise ValidationError('Email and verification code are required.')
 
         email = email.strip().lower()
 
-        # Verify OTP
         otp_service = self.env['jabin.otp.service']
         if not otp_service.verify_otp(email, code, 'register'):
             _logger.audit('Registration OTP verification failed: email=%s', email,
                           extra={'email': email, 'action': 'registration_otp_verify_failed'})
             raise ValidationError('Invalid verification code.')
 
-        # Find user
-        User = self.env['res.users']
+        # ✅ FIXED: Added .sudo()
+        User = self.env['res.users'].sudo()
         user = User.find_by_login(email)
 
         if not user:
             raise ValidationError('User not found.')
 
-        # Activate user account
         try:
             user.sudo().write({'x_status': 'active'})
             _logger.audit('User activated: id=%s email=%s', user.id, email,
@@ -306,24 +236,20 @@ class AuthService(models.AbstractModel):
             _logger.error('Failed to activate user: %s', exc)
             raise ValidationError(f'Failed to activate user: {exc}')
 
-        # Generate tokens for automatic login
         user_type = getattr(user, 'x_user_type', None) or 'customer'
         tokens = self.env['jabin.token.service'].issue_pair(user.id, user_type, email)
 
-        # Update last login
         try:
             user.sudo().write({'x_last_login': fields.Datetime.now()})
         except Exception:
             pass
 
-        # Send welcome email
         try:
             email_service = self.env['jabin.email.service']
             email_service.send_welcome_email(email, user.name)
         except Exception as exc:
             _logger.warning('Failed to send welcome email: %s', exc)
 
-        # Log successful registration
         try:
             self.env['jabin.audit.service'].log_login(user_id=user.id, success=True, login=email)
         except Exception:
@@ -341,32 +267,23 @@ class AuthService(models.AbstractModel):
 
     @api.model
     def resend_registration_otp(self, email: str) -> Dict[str, Any]:
-        """Resend registration OTP to user.
-
-        Args:
-            email: User's email address
-
-        Returns:
-            Dictionary with success status and message
-        """
+        """Resend registration OTP to user."""
         if not email:
             return {'success': False, 'message': 'Email is required.'}
 
         email = email.strip().lower()
 
-        # Check if user exists
-        User = self.env['res.users']
+        # ✅ FIXED: Added .sudo()
+        User = self.env['res.users'].sudo()
         user = User.find_by_login(email)
 
         if not user:
             return {'success': False, 'message': 'User not found.'}
 
-        # Check if user is already active
         status = getattr(user, 'x_status', None)
         if status == 'active':
             return {'success': False, 'message': 'User already verified.'}
 
-        # Resend OTP
         otp_service = self.env['jabin.otp.service']
         can_resend, reason = otp_service.can_resend_otp(email, 'register')
 
@@ -383,33 +300,23 @@ class AuthService(models.AbstractModel):
 
     @api.model
     def resend_login_otp(self, email: str) -> Dict[str, Any]:
-        """Resend login OTP to user.
-
-        Args:
-            email: User's email address
-
-        Returns:
-            Dictionary with success status and message
-        """
+        """Resend login OTP to user."""
         if not email:
             return {'success': False, 'message': 'Email is required.'}
 
         email = email.strip().lower()
 
-        # Check if user exists
-        User = self.env['res.users']
+        # ✅ FIXED: Added .sudo()
+        User = self.env['res.users'].sudo()
         user = User.find_by_login(email)
 
         if not user:
-            # Don't reveal that user doesn't exist
             return {'success': True, 'message': 'Verification code sent successfully'}
 
-        # Check account status
         status = getattr(user, 'x_status', None)
         if status != 'active':
             return {'success': False, 'message': 'Account is not active.'}
 
-        # Resend OTP
         otp_service = self.env['jabin.otp.service']
         can_resend, reason = otp_service.can_resend_otp(email, 'login')
 
@@ -453,21 +360,21 @@ class AuthService(models.AbstractModel):
 
     @api.model
     def get_profile(self, user_id: int) -> Dict[str, Any]:
-        user = self.env['res.users'].browse(user_id)
+        # ✅ FIXED: Added .sudo()
+        user = self.env['res.users'].sudo().browse(user_id)
         if not user.exists():
             raise MissingError('User not found.')
 
-        # Add profile completion status
         profile_data = user.to_public_dict()
         profile_completion_svc = self.env['jabin.profile.completion.service']
         profile_status = profile_completion_svc.get_profile_status(user_id)
         profile_data['profile_completion'] = profile_status
-
         return profile_data
 
     @api.model
     def update_profile(self, user_id: int, payload: Dict[str, Any]) -> Dict[str, Any]:
-        user = self.env['res.users'].browse(user_id)
+        # ✅ FIXED: Added .sudo()
+        user = self.env['res.users'].sudo().browse(user_id)
         if not user.exists():
             raise MissingError('User not found.')
 
@@ -494,7 +401,6 @@ class AuthService(models.AbstractModel):
             _logger.audit('Profile updated (self): user=%s fields=%s', user_id, list(vals.keys()),
                           extra={'user_id': user_id, 'action': 'profile_update'})
 
-        # Check if profile is now complete
         profile_completion_svc = self.env['jabin.profile.completion.service']
         if profile_completion_svc.is_profile_completed(user_id):
             try:
@@ -506,7 +412,8 @@ class AuthService(models.AbstractModel):
 
     @api.model
     def change_password(self, user_id: int, current_password: str, new_password: str) -> Dict[str, Any]:
-        user = self.env['res.users'].browse(user_id)
+        # ✅ FIXED: Added .sudo()
+        user = self.env['res.users'].sudo().browse(user_id)
         if not user.exists():
             raise MissingError('User not found.')
         if not current_password or not new_password:

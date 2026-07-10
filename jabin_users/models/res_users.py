@@ -34,6 +34,13 @@ class JabinUser(models.Model):
     x_is_active_account = fields.Boolean(string='Account Active', compute='_compute_x_is_active_account', store=True,
                                          help="Technical flag: True when status == 'active'.")
 
+    # FIX: Add profile completion tracking field
+    x_profile_completed = fields.Boolean(
+        string='Profile Completed',
+        default=False,
+        help='Whether the user has completed their profile with all required information.'
+    )
+
     @api.depends('x_status')
     def _compute_x_is_active_account(self):
         for rec in self:
@@ -41,15 +48,21 @@ class JabinUser(models.Model):
 
     _sql_constraints = [('x_phone_unique', 'unique(x_phone)', 'A user with this phone number already exists.')]
 
-    @api.model
+    @api.model_create_multi
     def create(self, vals_list):
-        if isinstance(vals_list, dict):
-            vals_list = [vals_list]
         for vals in vals_list:
             self._normalize_vals(vals)
+
         users = super().create(vals_list)
+
         for user in users:
-            _logger.audit('User created: id=%s type=%s', user.id, user.x_user_type, extra={'user_id': user.id})
+            _logger.audit(
+                'User created: id=%s type=%s',
+                user.id,
+                user.x_user_type,
+                extra={'user_id': user.id}
+            )
+
         return users
 
     def write(self, vals):
@@ -86,8 +99,17 @@ class JabinUser(models.Model):
 
     def to_public_dict(self) -> dict:
         self.ensure_one()
-        return {'id': self.id, 'name': self.name, 'email': self.login, 'phone': self.x_phone or None,
-                'user_type': self.x_user_type, 'status': self.x_status, 'balance': self.x_balance,
-                'currency': self.x_currency_id.name if self.x_currency_id else None, 'avatar': bool(self.x_avatar),
-                'last_login': self.x_last_login.isoformat() if self.x_last_login else None,
-                'is_active_account': self.x_is_active_account}
+        return {
+            'id': self.id,
+            'name': self.name,
+            'email': self.login,
+            'phone': self.x_phone or None,
+            'user_type': self.x_user_type,
+            'status': self.x_status,
+            'balance': self.x_balance,
+            'currency': self.x_currency_id.name if self.x_currency_id else None,
+            'avatar': bool(self.x_avatar),
+            'last_login': self.x_last_login.isoformat() if self.x_last_login else None,
+            'is_active_account': self.x_is_active_account,
+            'profile_completed': self.x_profile_completed,  # FIX: Include in response
+        }

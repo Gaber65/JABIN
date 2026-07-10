@@ -6,6 +6,7 @@ from odoo.addons.jabin_core import JabinLogger
 from odoo.addons.jabin_security.utils.jwt_utils import DEFAULT_ACCESS_TTL, DEFAULT_REFRESH_TTL, JWTError, JWTUtils
 _logger = JabinLogger.get('auth.token_service')
 
+
 class TokenService(models.AbstractModel):
     _name = 'jabin.token.service'
     _description = 'JABIN Token Service'
@@ -40,9 +41,22 @@ class TokenService(models.AbstractModel):
         else:
             expires_at = fields.Datetime.now() + _dt.timedelta(seconds=DEFAULT_REFRESH_TTL)
         meta = self._request_meta()
-        self.env['jabin.refresh.token'].register(jti=jti, user_id=user_id, expires_at=expires_at, ip_address=meta['ip_address'], user_agent=meta['user_agent'])
+        # FIX: Add sudo() for anonymous access
+        self.env['jabin.refresh.token'].sudo().register(
+            jti=jti,
+            user_id=user_id,
+            expires_at=expires_at,
+            ip_address=meta['ip_address'],
+            user_agent=meta['user_agent']
+        )
         _logger.audit('Token pair issued: user=%s', user_id, extra={'user_id': user_id, 'action': 'token_issued', 'jti': jti})
-        return {'access_token': access_token, 'refresh_token': refresh_token, 'token_type': 'Bearer', 'expires_in': DEFAULT_ACCESS_TTL, 'refresh_expires_in': DEFAULT_REFRESH_TTL}
+        return {
+            'access_token': access_token,
+            'refresh_token': refresh_token,
+            'token_type': 'Bearer',
+            'expires_in': DEFAULT_ACCESS_TTL,
+            'refresh_expires_in': DEFAULT_REFRESH_TTL
+        }
 
     @api.model
     def verify_access_token(self, token: str) -> Dict[str, Any]:
@@ -68,7 +82,8 @@ class TokenService(models.AbstractModel):
         user_id = JWTUtils.get_user_id(claims)
         if not jti or user_id is None:
             raise JWTError('Refresh token is missing required claims.')
-        RefreshToken = self.env['jabin.refresh.token']
+        # FIX: Add sudo() for anonymous access
+        RefreshToken = self.env['jabin.refresh.token'].sudo()
         token_row = RefreshToken.find_by_jti(jti)
         if not token_row:
             _logger.audit('Refresh failed (unknown jti): user=%s', user_id, extra={'user_id': user_id, 'action': 'refresh_unknown_jti', 'jti': jti})
@@ -79,13 +94,14 @@ class TokenService(models.AbstractModel):
             RefreshToken.revoke_all_for_user(user_id)
             raise JWTError('Refresh token has been revoked. All sessions terminated for security.')
         token_row.revoke()
-        user = self.env['res.users'].browse(user_id)
+        # FIX: Add sudo() for anonymous access
+        user = self.env['res.users'].sudo().browse(user_id)
         if not user.exists():
             raise JWTError('User no longer exists.')
         user_type = getattr(user, 'x_user_type', None) or 'customer'
         email = user.login or ''
         try:
-            self.env['jabin.audit.service'].log_token_refresh(user_id, old_jti=jti)
+            self.env['jabin.audit.service'].sudo().log_token_refresh(user_id, old_jti=jti)
         except Exception:
             pass
         return self.issue_pair(user_id, user_type, email)
@@ -101,7 +117,8 @@ class TokenService(models.AbstractModel):
         jti = JWTUtils.get_token_id(claims)
         if not jti:
             return False
-        token_row = self.env['jabin.refresh.token'].find_by_jti(jti)
+        # FIX: Add sudo() for anonymous access
+        token_row = self.env['jabin.refresh.token'].sudo().find_by_jti(jti)
         if not token_row:
             return False
         token_row.revoke()
@@ -109,4 +126,5 @@ class TokenService(models.AbstractModel):
 
     @api.model
     def revoke_all_for_user(self, user_id: int) -> int:
-        return self.env['jabin.refresh.token'].revoke_all_for_user(user_id)
+        # FIX: Add sudo() for anonymous access
+        return self.env['jabin.refresh.token'].sudo().revoke_all_for_user(user_id)

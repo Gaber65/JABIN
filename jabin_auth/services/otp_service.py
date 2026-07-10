@@ -1,10 +1,11 @@
 from __future__ import annotations
 import secrets
 import string
-from datetime import timedelta
-from typing import Optional, Tuple
+from datetime import  timedelta
+from typing import TYPE_CHECKING, Optional, Tuple
 from odoo import api, models,fields
 from odoo.exceptions import ValidationError
+from odoo.addons.jabin_core import JabinLogger
 
 
 
@@ -53,23 +54,13 @@ class OtpService(models.AbstractModel):
     # -- OTP Creation ------------------------------------------------------ #
     @api.model
     def create_otp(
-            self,
-            email: str,
-            purpose: str,
-            user_id: Optional[int] = None,
-            invalidate_existing: bool = True
+        self,
+        email: str,
+        purpose: str,
+        user_id: Optional[int] = None,
+        invalidate_existing: bool = True
     ) -> Tuple[str, str]:
-        """Create a new OTP for the given email and purpose.
-
-        Args:
-            email: Email address for the OTP
-            purpose: Purpose of the OTP (register, login, etc.)
-            user_id: Optional user ID if associated with existing user
-            invalidate_existing: Whether to invalidate existing OTPs for this email/purpose
-
-        Returns:
-            Tuple of (plain_code, code_hash) - the plain code is for email sending only
-        """
+        """Create a new OTP for the given email and purpose."""
         if not email:
             raise ValidationError('Email is required.')
         if not purpose:
@@ -78,7 +69,7 @@ class OtpService(models.AbstractModel):
         # Normalize email
         email = email.strip().lower()
 
-        # Invalidate existing OTPs for this email and purpose
+        # Invalidate existing OTPs for this email and purpose - MUST use sudo()
         if invalidate_existing:
             self.invalidate_existing_otps(email, purpose)
 
@@ -89,8 +80,8 @@ class OtpService(models.AbstractModel):
         # Calculate expiration
         expires_at = fields.Datetime.now() + timedelta(minutes=self.OTP_EXPIRY_MINUTES)
 
-        # Create OTP record
-        OTP = self.env['jabin.otp']
+        # Create OTP record - MUST use sudo() for anonymous access
+        OTP = self.env['jabin.otp'].sudo()
         otp_data = {
             'email': email,
             'user_id': user_id,
@@ -119,26 +110,17 @@ class OtpService(models.AbstractModel):
 
     @api.model
     def create_and_send_otp(
-            self,
-            email: str,
-            purpose: str,
-            user_id: Optional[int] = None
+        self,
+        email: str,
+        purpose: str,
+        user_id: Optional[int] = None
     ) -> str:
-        """Create an OTP and send it via email.
-
-        Args:
-            email: Email address for the OTP
-            purpose: Purpose of the OTP
-            user_id: Optional user ID
-
-        Returns:
-            The plain OTP code (for testing/logging, not for production use)
-        """
+        """Create an OTP and send it via email."""
         plain_code, code_hash = self.create_otp(email, purpose, user_id)
 
-        # Send email
+        # Send email - MUST use sudo() for anonymous access
         try:
-            email_service = self.env['jabin.email.service']
+            email_service = self.env['jabin.email.service'].sudo()
             email_service.send_verification_code(email, plain_code, purpose)
             _get_logger().audit(
                 'OTP email sent: email=%s purpose=%s',
@@ -148,8 +130,6 @@ class OtpService(models.AbstractModel):
             )
         except Exception as exc:
             _get_logger().error('Failed to send OTP email: %s', exc)
-            # Don't fail the entire operation if email sending fails
-            # The OTP is still created and can be verified
             pass
 
         return plain_code
@@ -157,29 +137,20 @@ class OtpService(models.AbstractModel):
     # -- OTP Verification -------------------------------------------------- #
     @api.model
     def verify_otp(
-            self,
-            email: str,
-            code: str,
-            purpose: str
+        self,
+        email: str,
+        code: str,
+        purpose: str
     ) -> bool:
-        """Verify an OTP code.
-
-        Args:
-            email: Email address
-            code: The OTP code to verify
-            purpose: Purpose of the OTP
-
-        Returns:
-            True if verification succeeded, False otherwise
-        """
+        """Verify an OTP code."""
         if not email or not code or not purpose:
             _get_logger().warning('Verification failed: missing parameters')
             return False
 
         email = email.strip().lower()
 
-        # Find active OTP
-        OTP = self.env['jabin.otp']
+        # Find active OTP - MUST use sudo() for anonymous access
+        OTP = self.env['jabin.otp'].sudo()
         otp = OTP.find_active_otp(email, purpose)
 
         if not otp:
@@ -233,22 +204,14 @@ class OtpService(models.AbstractModel):
     @api.model
     def invalidate_existing_otps(self, email: str, purpose: str) -> int:
         """Invalidate all existing OTPs for an email and purpose."""
-        OTP = self.env['jabin.otp']
+        OTP = self.env['jabin.otp'].sudo()
         return OTP.invalidate_all_for_email(email, purpose)
 
     @api.model
     def can_resend_otp(self, email: str, purpose: str) -> Tuple[bool, str]:
-        """Check if user can request an OTP resend.
-
-        Args:
-            email: Email address
-            purpose: Purpose of the OTP
-
-        Returns:
-            Tuple of (can_resend, reason) where reason is empty if can_resend is True
-        """
+        """Check if user can request an OTP resend."""
         email = email.strip().lower()
-        OTP = self.env['jabin.otp']
+        OTP = self.env['jabin.otp'].sudo()
 
         # Check recent resends (within cooldown period)
         recent_count = OTP.count_recent_resends(email, purpose, minutes=1)
@@ -264,21 +227,12 @@ class OtpService(models.AbstractModel):
 
     @api.model
     def resend_otp(
-            self,
-            email: str,
-            purpose: str,
-            user_id: Optional[int] = None
+        self,
+        email: str,
+        purpose: str,
+        user_id: Optional[int] = None
     ) -> Tuple[bool, str]:
-        """Resend OTP for an email and purpose.
-
-        Args:
-            email: Email address
-            purpose: Purpose of the OTP
-            user_id: Optional user ID
-
-        Returns:
-            Tuple of (success, message)
-        """
+        """Resend OTP for an email and purpose."""
         can_resend, reason = self.can_resend_otp(email, purpose)
         if not can_resend:
             return False, reason
@@ -297,12 +251,9 @@ class OtpService(models.AbstractModel):
     # -- Utility Methods --------------------------------------------------- #
     @api.model
     def get_otp_status(self, email: str, purpose: str) -> dict:
-        """Get the status of OTP for an email and purpose.
-
-        Returns a dictionary with OTP status information.
-        """
+        """Get the status of OTP for an email and purpose."""
         email = email.strip().lower()
-        OTP = self.env['jabin.otp']
+        OTP = self.env['jabin.otp'].sudo()
 
         active_otp = OTP.find_active_otp(email, purpose, include_expired=True)
 
@@ -320,17 +271,13 @@ class OtpService(models.AbstractModel):
             'resend_count': active_otp.resend_count,
             'can_verify': active_otp.can_verify(),
             'can_resend': self.can_resend_otp(email, purpose)[0],
-            'expires_in': max(0, (
-                        active_otp.expires_at - fields.Datetime.now()).total_seconds()) if not active_otp.is_expired() else 0
+            'expires_in': max(0, (active_otp.expires_at - fields.Datetime.now()).total_seconds()) if not active_otp.is_expired() else 0
         }
 
     @api.model
     def cleanup_expired_otps(self) -> int:
-        """Clean up all expired OTPs.
-
-        Returns the number of OTPs deleted.
-        """
-        OTP = self.env['jabin.otp']
+        """Clean up all expired OTPs."""
+        OTP = self.env['jabin.otp'].sudo()
         expired_otps = OTP.search([('expires_at', '<', fields.Datetime.now())])
 
         if expired_otps:

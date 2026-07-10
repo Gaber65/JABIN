@@ -1,37 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  JABIN Auth - Access Rights (Sprint 2)
-
-  This file declares access rights (ir.model.access) for the models
-  introduced by this module:
-    - jabin.refresh.token       (refresh-token revocation registry)
-    - jabin.password.service    (AbstractModel, service locator)
-    - jabin.token.service       (AbstractModel, service locator)
-    - jabin.auth.service        (AbstractModel, service locator)
-
-  Access-right philosophy:
-  * The refresh-token registry is security-sensitive. Full CRUD is granted
-    only to the JABIN Security Administrator group (defined by
-    jabin_security). Authenticated users get read access so that the
-    token service can look up and revoke their own tokens during normal
-    request flow (Odoo access checks run on the request user).
-  * Service AbstractModels have no database table, so they receive a
-    read-only access record purely to satisfy the Odoo registry (an
-    AbstractModel without an access record triggers a warning at install
-    time). These records carry no group so they apply globally.
-
-  Notes
-  ~~~~~
-  * We intentionally do NOT define a new group here. The JABIN Security
-    Administrator group (jabin_security_admin_group) and the JABIN User
-    Manager group (jabin_user_manager_group) are defined by the
-    jabin_security and jabin_users modules respectively and are reused.
-  * Authentication endpoints themselves run with auth="none" or
-    auth_required (custom decorator). The decorator validates JWTs and
-    builds a SecurityContext; the underlying ORM calls are made using
-    Odoo's standard request environment which respects these access
-    rights.
--->
 <odoo>
     <data>
 
@@ -39,7 +6,7 @@
         <!-- Access rights: jabin.refresh.token                             -->
         <!-- ============================================================== -->
 
-        <!-- Security admin: full CRUD over the refresh-token registry. -->
+        <!-- Security admin: full CRUD -->
         <record id="jabin_refresh_token_access_admin" model="ir.model.access">
             <field name="name">jabin.refresh.token: admin full access</field>
             <field name="model_id" ref="model_jabin_refresh_token"/>
@@ -50,11 +17,7 @@
             <field name="perm_unlink" eval="1"/>
         </record>
 
-        <!-- Authenticated users: read access so the token service can
-             inspect and revoke their own refresh tokens during refresh /
-             logout flows. Write/create/unlink remain restricted to the
-             admin group; the service layer uses sudo() for registry
-             mutations when necessary. -->
+        <!-- Authenticated users: read access -->
         <record id="jabin_refresh_token_access_user_read" model="ir.model.access">
             <field name="name">jabin.refresh.token: user read</field>
             <field name="model_id" ref="model_jabin_refresh_token"/>
@@ -65,9 +28,58 @@
             <field name="perm_unlink" eval="0"/>
         </record>
 
+        <!-- Public user: create access for anonymous token operations -->
+        <record id="jabin_refresh_token_access_public" model="ir.model.access">
+            <field name="name">jabin.refresh.token: public create</field>
+            <field name="model_id" ref="model_jabin_refresh_token"/>
+            <field name="group_id" ref="base.group_public"/>
+            <field name="perm_read" eval="0"/>
+            <field name="perm_write" eval="0"/>
+            <field name="perm_create" eval="1"/>
+            <field name="perm_unlink" eval="0"/>
+        </record>
+
         <!-- ============================================================== -->
-        <!-- Access rights: jabin.password.service (AbstractModel, no table)-->
+        <!-- Access rights: jabin.otp                                        -->
         <!-- ============================================================== -->
+
+        <!-- Security admin: full CRUD -->
+        <record id="jabin_otp_access_admin" model="ir.model.access">
+            <field name="name">jabin.otp: admin full access</field>
+            <field name="model_id" ref="model_jabin_otp"/>
+            <field name="group_id" ref="jabin_security.jabin_security_admin_group"/>
+            <field name="perm_read" eval="1"/>
+            <field name="perm_write" eval="1"/>
+            <field name="perm_create" eval="1"/>
+            <field name="perm_unlink" eval="1"/>
+        </record>
+
+        <!-- Authenticated users: full access -->
+        <record id="jabin_otp_access_user" model="ir.model.access">
+            <field name="name">jabin.otp: user full access</field>
+            <field name="model_id" ref="model_jabin_otp"/>
+            <field name="group_id" ref="base.group_user"/>
+            <field name="perm_read" eval="1"/>
+            <field name="perm_write" eval="1"/>
+            <field name="perm_create" eval="1"/>
+            <field name="perm_unlink" eval="1"/>
+        </record>
+
+        <!-- Public user: create access for anonymous registration -->
+        <record id="jabin_otp_access_public" model="ir.model.access">
+            <field name="name">jabin.otp: public create</field>
+            <field name="model_id" ref="model_jabin_otp"/>
+            <field name="group_id" ref="base.group_public"/>
+            <field name="perm_read" eval="0"/>
+            <field name="perm_write" eval="0"/>
+            <field name="perm_create" eval="1"/>
+            <field name="perm_unlink" eval="0"/>
+        </record>
+
+        <!-- ============================================================== -->
+        <!-- Access rights: Service AbstractModels (no DB table)          -->
+        <!-- ============================================================== -->
+
         <record id="jabin_password_service_access" model="ir.model.access">
             <field name="name">jabin.password.service: no-table access</field>
             <field name="model_id" ref="model_jabin_password_service"/>
@@ -77,9 +89,6 @@
             <field name="perm_unlink" eval="0"/>
         </record>
 
-        <!-- ============================================================== -->
-        <!-- Access rights: jabin.token.service (AbstractModel, no table)   -->
-        <!-- ============================================================== -->
         <record id="jabin_token_service_access" model="ir.model.access">
             <field name="name">jabin.token.service: no-table access</field>
             <field name="model_id" ref="model_jabin_token_service"/>
@@ -89,9 +98,6 @@
             <field name="perm_unlink" eval="0"/>
         </record>
 
-        <!-- ============================================================== -->
-        <!-- Access rights: jabin.auth.service (AbstractModel, no table)    -->
-        <!-- ============================================================== -->
         <record id="jabin_auth_service_access" model="ir.model.access">
             <field name="name">jabin.auth.service: no-table access</field>
             <field name="model_id" ref="model_jabin_auth_service"/>
@@ -100,26 +106,39 @@
             <field name="perm_create" eval="0"/>
             <field name="perm_unlink" eval="0"/>
         </record>
+
+        <record id="jabin_otp_service_access" model="ir.model.access">
+            <field name="name">jabin.otp.service: no-table access</field>
+            <field name="model_id" ref="model_jabin_otp_service"/>
+            <field name="perm_read" eval="1"/>
+            <field name="perm_write" eval="0"/>
+            <field name="perm_create" eval="0"/>
+            <field name="perm_unlink" eval="0"/>
+        </record>
+
+        <record id="jabin_email_service_access" model="ir.model.access">
+            <field name="name">jabin.email.service: no-table access</field>
+            <field name="model_id" ref="model_jabin_email_service"/>
+            <field name="perm_read" eval="1"/>
+            <field name="perm_write" eval="0"/>
+            <field name="perm_create" eval="0"/>
+            <field name="perm_unlink" eval="0"/>
+        </record>
+
+        <record id="jabin_profile_completion_service_access" model="ir.model.access">
+            <field name="name">jabin.profile.completion.service: no-table access</field>
+            <field name="model_id" ref="model_jabin_profile_completion_service"/>
+            <field name="perm_read" eval="1"/>
+            <field name="perm_write" eval="0"/>
+            <field name="perm_create" eval="0"/>
+            <field name="perm_unlink" eval="0"/>
+        </record>
+
+        <!-- User group definition -->
         <record id="group_jabin_user" model="res.groups">
             <field name="name">User</field>
             <field name="category_id" ref="base.module_category_hidden"/>
         </record>
 
-        <record id="rule_jabin_otp_user" model="ir.rule">
-            <field name="name">JABIN: OTP User Access</field>
-            <field name="model_id" ref="model_jabin_otp"/>
-            <field name="groups" eval="[(4, ref('jabin_auth.group_jabin_user'))]"/>
-            <field name="domain_force">[(1, '=', 1)]</field>
-        </record>
-
-        <record id="rule_jabin_otp_admin" model="ir.rule">
-            <field name="name">JABIN: OTP Admin Access</field>
-            <field name="model_id" ref="model_jabin_otp"/>
-            <field name="groups" eval="[(4, ref('base.group_system'))]"/>
-            <field name="perm_read" eval="True"/>
-            <field name="perm_write" eval="True"/>
-            <field name="perm_create" eval="True"/>
-            <field name="perm_unlink" eval="True"/>
-        </record>
     </data>
 </odoo>
