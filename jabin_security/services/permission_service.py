@@ -65,7 +65,7 @@ class PermissionService(models.AbstractModel):
 
     @api.model
     def assign_role(self, user_id: int, role_code: str) -> Dict[str, Any]:
-        user = self.env['res.users'].browse(user_id)
+        user = self.env['jabin.user'].browse(user_id)
         if not user.exists():
             raise MissingError(f'User {user_id} not found.')
         role = self.env['jabin.role'].find_by_code(role_code)
@@ -77,7 +77,7 @@ class PermissionService(models.AbstractModel):
 
     @api.model
     def revoke_role(self, user_id: int, role_code: str) -> Dict[str, Any]:
-        user = self.env['res.users'].browse(user_id)
+        user = self.env['jabin.user'].browse(user_id)
         if not user.exists():
             raise MissingError(f'User {user_id} not found.')
         role = self.env['jabin.role'].find_by_code(role_code)
@@ -89,21 +89,21 @@ class PermissionService(models.AbstractModel):
 
     @api.model
     def get_user_roles(self, user_id: int) -> List[Dict[str, Any]]:
-        user = self.env['res.users'].browse(user_id)
+        user = self.env['jabin.user'].browse(user_id)
         if not user.exists():
             raise MissingError(f'User {user_id} not found.')
         return [self._role_to_dict(r) for r in user.x_jabin_role_ids]
 
     @api.model
     def resolve_permissions(self, user_id: int) -> Set[str]:
-        user = self.env['res.users'].browse(user_id)
+        user = self.env['jabin.user'].browse(user_id)
         if not user.exists():
             return set()
         return user.get_permission_codes()
 
     @api.model
     def resolve_roles(self, user_id: int) -> List[str]:
-        user = self.env['res.users'].browse(user_id)
+        user = self.env['jabin.user'].browse(user_id)
         if not user.exists():
             return []
         return user.get_role_codes()

@@ -10,7 +10,7 @@ JABIN Users
 User-management domain for the JABIN ERP platform.
 
 Provides:
-    * Extended res.users with JABIN business fields (user type, balance,
+    * Extended jabin.user with JABIN business fields (user type, balance,
       status, phone, avatar, last login).
     * Multi-address model (jabin.user.address).
     * REST APIs under /api/v1/users and /api/v1/addresses.
@@ -23,8 +23,8 @@ User types: Admin, Customer, Manager, Employee, Driver.
     "license": "Other proprietary",
     "depends": ["base", "jabin_core"],
     "data": [
-        # Security (access rights) must load before views/data in Odoo.
-        "security/jabin_users_security.xml",
+        "security/security.xml",
+        "security/ir.model.access.csv",
     ],
     "assets": {},
     "installable": True,

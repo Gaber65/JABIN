@@ -1,0 +1,9 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+
+jabin_user_manager_access,jabin.user manager,model_jabin_user,jabin_users.group_jabin_user_manager,1,1,1,1
+
+jabin_user_read_access,jabin.user read,model_jabin_user,base.group_user,1,0,0,0
+
+jabin_user_address_manager_access,jabin.user.address manager,model_jabin_user_address,jabin_users.group_jabin_user_manager,1,1,1,1
+
+jabin_user_address_read_access,jabin.user.address read,model_jabin_user_address,base.group_user,1,0,0,0

@@ -11,8 +11,8 @@ class JabinAuditLog(models.Model):
     _order = 'create_date desc'
     action = fields.Char(string='Action', required=True, index=True, help="Event code in '<domain>.<event>' format (e.g. 'auth.login').")
     severity = fields.Selection(selection=[('info', 'Info'), ('warning', 'Warning'), ('error', 'Error'), ('critical', 'Critical')], string='Severity', default='info', required=True, index=True)
-    user_id = fields.Many2one(comodel_name='res.users', string='Actor (User)', index=True, help='The user who performed the action.')
-    target_user_id = fields.Many2one(comodel_name='res.users', string='Target User', index=True, help='The user the action was performed on (when different from actor).')
+    user_id = fields.Many2one(comodel_name='jabin.user', string='Actor (User)', index=True, help='The user who performed the action.')
+    target_user_id = fields.Many2one(comodel_name='jabin.user', string='Target User', index=True, help='The user the action was performed on (when different from actor).')
     ip_address = fields.Char(string='IP Address', help='Client IP address (when available).')
     user_agent = fields.Char(string='User Agent', help='Client User-Agent string (truncated).')
     endpoint = fields.Char(string='Endpoint', help='API endpoint that triggered the event.')

@@ -4,7 +4,6 @@ from odoo import api, fields, models
 from odoo.exceptions import MissingError, ValidationError
 from odoo.addons.jabin_core import EmailValidator, JabinLogger, ValidationHelper
 from odoo.addons.jabin_security.utils.jwt_utils import JWTError, JWTUtils
-from odoo.addons.jabin_security.utils.security_context import SecurityContext
 
 _logger = JabinLogger.get('auth.service')
 _PROFILE_UPDATE_FIELDS = {'name', 'phone', 'avatar'}
@@ -31,7 +30,7 @@ class AuthService(models.AbstractModel):
                 pass
             raise ValidationError('Invalid login credentials.')
 
-        user = self.env['res.users'].browse(user_id)
+        user = self.env['jabin.user'].browse(user_id)
         user_type = getattr(user, 'x_user_type', None) or 'customer'
         email = user.login or ''
         tokens = self.env['jabin.token.service'].issue_pair(user_id, user_type, email)
@@ -59,7 +58,7 @@ class AuthService(models.AbstractModel):
         email = email.strip().lower()
 
         # ✅ FIXED: Added .sudo()
-        User = self.env['res.users'].sudo()
+        User = self.env['jabin.user'].sudo()
         user = User.find_by_login(email)
 
         if not user:
@@ -103,7 +102,7 @@ class AuthService(models.AbstractModel):
         if not otp_service.verify_otp(email, code, 'login'):
             try:
                 # ✅ FIXED: Added .sudo()
-                user = self.env['res.users'].sudo().find_by_login(email)
+                user = self.env['jabin.user'].sudo().find_by_login(email)
                 user_id = user.id if user else None
                 self.env['jabin.audit.service'].log_login(user_id=user_id, success=False, login=email)
             except Exception:
@@ -114,7 +113,7 @@ class AuthService(models.AbstractModel):
             raise ValidationError('Invalid verification code.')
 
         # ✅ FIXED: Added .sudo()
-        User = self.env['res.users'].sudo()
+        User = self.env['jabin.user'].sudo()
         user = User.find_by_login(email)
 
         if not user:
@@ -160,7 +159,7 @@ class AuthService(models.AbstractModel):
         email = email.strip().lower()
 
         # ✅ FIXED: Added .sudo()
-        User = self.env['res.users'].sudo()
+        User = self.env['jabin.user'].sudo()
         existing_user = User.find_by_login(email)
 
         if existing_user:
@@ -222,7 +221,7 @@ class AuthService(models.AbstractModel):
             raise ValidationError('Invalid verification code.')
 
         # ✅ FIXED: Added .sudo()
-        User = self.env['res.users'].sudo()
+        User = self.env['jabin.user'].sudo()
         user = User.find_by_login(email)
 
         if not user:
@@ -274,7 +273,7 @@ class AuthService(models.AbstractModel):
         email = email.strip().lower()
 
         # ✅ FIXED: Added .sudo()
-        User = self.env['res.users'].sudo()
+        User = self.env['jabin.user'].sudo()
         user = User.find_by_login(email)
 
         if not user:
@@ -307,7 +306,7 @@ class AuthService(models.AbstractModel):
         email = email.strip().lower()
 
         # ✅ FIXED: Added .sudo()
-        User = self.env['res.users'].sudo()
+        User = self.env['jabin.user'].sudo()
         user = User.find_by_login(email)
 
         if not user:
@@ -361,7 +360,7 @@ class AuthService(models.AbstractModel):
     @api.model
     def get_profile(self, user_id: int) -> Dict[str, Any]:
         # ✅ FIXED: Added .sudo()
-        user = self.env['res.users'].sudo().browse(user_id)
+        user = self.env['jabin.user'].sudo().browse(user_id)
         if not user.exists():
             raise MissingError('User not found.')
 
@@ -374,7 +373,7 @@ class AuthService(models.AbstractModel):
     @api.model
     def update_profile(self, user_id: int, payload: Dict[str, Any]) -> Dict[str, Any]:
         # ✅ FIXED: Added .sudo()
-        user = self.env['res.users'].sudo().browse(user_id)
+        user = self.env['jabin.user'].sudo().browse(user_id)
         if not user.exists():
             raise MissingError('User not found.')
 
@@ -413,7 +412,7 @@ class AuthService(models.AbstractModel):
     @api.model
     def change_password(self, user_id: int, current_password: str, new_password: str) -> Dict[str, Any]:
         # ✅ FIXED: Added .sudo()
-        user = self.env['res.users'].sudo().browse(user_id)
+        user = self.env['jabin.user'].sudo().browse(user_id)
         if not user.exists():
             raise MissingError('User not found.')
         if not current_password or not new_password:

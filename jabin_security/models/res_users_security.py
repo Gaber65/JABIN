@@ -4,7 +4,7 @@ from odoo.addons.jabin_core import JabinLogger
 _logger = JabinLogger.get('security.res_users')
 
 class JabinUserSecurity(models.Model):
-    _inherit = 'res.users'
+    _inherit = 'jabin.user'
     _description = 'JABIN User Security Extension'
     x_jabin_role_ids = fields.Many2many(comodel_name='jabin.role', relation='jabin_role_user_rel', column1='user_id', column2='role_id', string='JABIN Roles', help='RBAC roles assigned to this user.')
 

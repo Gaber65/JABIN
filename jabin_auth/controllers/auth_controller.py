@@ -164,7 +164,7 @@ class AuthController(BaseApiController):
             svc = http.request.env['jabin.auth.service'].sudo()
 
             # Check if email already exists
-            User = http.request.env['res.users'].sudo()
+            User = http.request.env['jabin.user'].sudo()
             existing_user = User.find_by_login(email)
             if existing_user:
                 # Check if user is already active

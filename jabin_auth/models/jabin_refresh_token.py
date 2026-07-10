@@ -9,7 +9,7 @@ class JabinRefreshToken(models.Model):
     _description = 'JABIN Refresh Token'
     _order = 'expires_at desc'
     jti = fields.Char(string='Token ID (jti)', required=True, index=True, help='Unique JWT ID of the refresh token (UUID hex).')
-    user_id = fields.Many2one(comodel_name='res.users', string='User', required=True, index=True, ondelete='cascade', help='The user this refresh token belongs to.')
+    user_id = fields.Many2one(comodel_name='jabin.user', string='User', required=True, index=True, ondelete='cascade', help='The user this refresh token belongs to.')
     expires_at = fields.Datetime(string='Expires At', required=True, index=True, help='When the refresh token becomes naturally invalid.')
     is_revoked = fields.Boolean(string='Revoked', default=False, index=True, help='True when the token has been explicitly revoked (logout, etc.).')
     revoked_at = fields.Datetime(string='Revoked At', help='Timestamp of revocation (if any).')

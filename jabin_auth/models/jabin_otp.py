@@ -53,7 +53,7 @@ class JabinOTP(models.Model):
         help='Email address for which the OTP was generated.'
     )
     user_id = fields.Many2one(
-        comodel_name='res.users',
+        comodel_name='jabin.user',
         string='User',
         index=True,
         ondelete='cascade',
@@ -211,9 +211,9 @@ class JabinOTP(models.Model):
         for record in records:
             _get_logger().audit(
                 'OTP created: email=%s purpose=%s',
-                record.email,
+                record.login,
                 record.purpose,
-                extra={'email': record.email, 'purpose': record.purpose}
+                extra={'email': record.login, 'purpose': record.purpose}
             )
         return records
 
@@ -224,9 +224,9 @@ class JabinOTP(models.Model):
             for record in self:
                 _get_logger().audit(
                     'OTP verified: email=%s purpose=%s',
-                    record.email,
+                    record.login,
                     record.purpose,
-                    extra={'email': record.email, 'purpose': record.purpose}
+                    extra={'email': record.login, 'purpose': record.purpose}
                 )
 
         if 'resend_count' in vals and vals['resend_count'] > self.resend_count:

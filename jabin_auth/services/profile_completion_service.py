@@ -80,7 +80,7 @@ class ProfileCompletionService(models.AbstractModel):
             }
 
         # Get user
-        User = self.env['res.users']
+        User = self.env['jabin.user']
         user = User.browse(user_id)
 
         if not user.exists():
@@ -121,7 +121,7 @@ class ProfileCompletionService(models.AbstractModel):
         return result
 
     @api.model
-    def _has_field_value(self, user: 'res.users', field: str) -> bool:
+    def _has_field_value(self, user: 'jabin.user', field: str) -> bool:
         """Check if a user has a value for a specific field."""
         try:
             value = getattr(user, field, None)
@@ -142,7 +142,7 @@ class ProfileCompletionService(models.AbstractModel):
         if not user_id:
             return False
 
-        User = self.env['res.users']
+        User = self.env['jabin.user']
         user = User.browse(user_id)
 
         if not user.exists():
@@ -163,7 +163,7 @@ class ProfileCompletionService(models.AbstractModel):
         if not user_id:
             return []
 
-        User = self.env['res.users']
+        User = self.env['jabin.user']
         user = User.browse(user_id)
 
         if not user.exists():
@@ -193,7 +193,7 @@ class ProfileCompletionService(models.AbstractModel):
                 'completion_percentage': 0
             }
 
-        User = self.env['res.users']
+        User = self.env['jabin.user']
         user = User.browse(user_id)
 
         if not user.exists():
@@ -231,7 +231,7 @@ class ProfileCompletionService(models.AbstractModel):
         }
 
     @api.model
-    def _get_field_details(self, user: 'res.users') -> Dict[str, Any]:
+    def _get_field_details(self, user: 'jabin.user') -> Dict[str, Any]:
         """Get detailed information about each profile field."""
         details = {}
 
@@ -289,7 +289,7 @@ class ProfileCompletionService(models.AbstractModel):
         if not user_id:
             return False
 
-        User = self.env['res.users']
+        User = self.env['jabin.user']
         user = User.browse(user_id)
 
         if not user.exists():

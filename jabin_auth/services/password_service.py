@@ -46,7 +46,7 @@ class PasswordService(models.AbstractModel):
 
     @api.model
     def set_user_password(self, user_id: int, plain: str) -> None:
-        user = self.env['res.users'].browse(user_id)
+        user = self.env['jabin.user'].browse(user_id)
         if not user.exists():
             return
         user.write({'password': plain})
@@ -60,7 +60,7 @@ class PasswordService(models.AbstractModel):
     def authenticate(self, login: str, plain_password: str) -> Optional[int]:
         if not login or not plain_password:
             return None
-        User = self.env['res.users']
+        User = self.env['jabin.user']
         user = User.find_by_login(login)
         if not user:
             user = User.find_by_phone(login)

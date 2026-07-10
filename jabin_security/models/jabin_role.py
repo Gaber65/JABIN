@@ -16,7 +16,7 @@ class JabinRole(models.Model):
     is_system = fields.Boolean(string='System Role', default=False, help='System roles are predefined and cannot be deleted.')
     active = fields.Boolean(string='Active', default=True, index=True)
     permission_ids = fields.Many2many(comodel_name='jabin.permission', relation='jabin_role_permission_rel', column1='role_id', column2='permission_id', string='Permissions', help='Permissions granted by this role.')
-    user_ids = fields.Many2many(comodel_name='res.users', relation='jabin_role_user_rel', column1='role_id', column2='user_id', string='Users', help='Users assigned to this role.')
+    user_ids = fields.Many2many(comodel_name='jabin.user', relation='jabin_role_user_rel', column1='role_id', column2='user_id', string='Users', help='Users assigned to this role.')
     _sql_constraints = [('code_unique', 'unique(code)', 'A role with this code already exists.')]
 
     @api.constrains('code')

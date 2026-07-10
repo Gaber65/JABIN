@@ -12,7 +12,7 @@ class AuthorizationService(models.AbstractModel):
 
     @api.model
     def build_context(self, user_id: int, token_id: Optional[str]=None) -> SecurityContext:
-        user = self.env['res.users'].browse(user_id)
+        user = self.env['jabin.user'].browse(user_id)
         if not user.exists():
             raise MissingError(f'User {user_id} not found.')
         roles: List[str] = list(user.get_role_codes())
@@ -25,7 +25,7 @@ class AuthorizationService(models.AbstractModel):
 
     @api.model
     def is_account_active(self, user_id: int) -> bool:
-        user = self.env['res.users'].browse(user_id)
+        user = self.env['jabin.user'].browse(user_id)
         if not user.exists():
             return False
         if not getattr(user, 'x_is_active_account', True):

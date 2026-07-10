@@ -73,7 +73,7 @@ class UserService(models.AbstractModel):
     @api.model
     def _check_uniqueness(self, email: Optional[str], phone: Optional[str], exclude_user_id: Optional[int]=None) -> ValidationResult:
         result = ValidationResult()
-        User = self.env['res.users']
+        User = self.env['jabin.user']
         if email and (not ValidationHelper.is_missing(email)):
             existing = User.find_by_login(email)
             if existing and (exclude_user_id is None or existing.id != exclude_user_id):
@@ -94,13 +94,13 @@ class UserService(models.AbstractModel):
         vals = self._map_create_vals(clean)
         _logger.info("CREATE USER VALS => %s", vals)
 
-        user = self.env['res.users'].sudo().create(vals)
+        user = self.env['jabin.user'].sudo().create(vals)
         _logger.audit('User created via service: id=%s email=%s type=%s', user.id, user.login, user.x_user_type, extra={'user_id': user.id, 'action': 'create_user'})
         return user.to_public_dict()
 
     @api.model
     def get_user(self, user_id: int) -> Dict[str, Any]:
-        user = self.env['res.users'].browse(user_id)
+        user = self.env['jabin.user'].browse(user_id)
         if not user.exists():
             raise MissingError(f'User {user_id} not found.')
         return user.to_public_dict()
@@ -116,7 +116,7 @@ class UserService(models.AbstractModel):
             domain.append('|')
             domain.append(('name', 'ilike', search))
             domain.append(('login', 'ilike', search))
-        User = self.env['res.users']
+        User = self.env['jabin.user']
         total = User.search_count(domain)
         meta = PaginationHelper.meta_dict(total, page, per_page)
         (offset, limit) = PaginationHelper.offset_limit(page, per_page)
@@ -125,7 +125,7 @@ class UserService(models.AbstractModel):
 
     @api.model
     def update_user(self, user_id: int, payload: Dict[str, Any]) -> Dict[str, Any]:
-        user = self.env['res.users'].browse(user_id)
+        user = self.env['jabin.user'].browse(user_id)
         if not user.exists():
             raise MissingError(f'User {user_id} not found.')
         clean = self._whitelist(payload, _USER_UPDATE_FIELDS | {'email', 'password'})
@@ -141,7 +141,7 @@ class UserService(models.AbstractModel):
 
     @api.model
     def archive_user(self, user_id: int) -> Dict[str, Any]:
-        user = self.env['res.users'].browse(user_id)
+        user = self.env['jabin.user'].browse(user_id)
         if not user.exists():
             raise MissingError(f'User {user_id} not found.')
         user.write({'active': False, 'x_status': 'inactive'})
@@ -150,7 +150,7 @@ class UserService(models.AbstractModel):
 
     @api.model
     def restore_user(self, user_id: int) -> Dict[str, Any]:
-        user = self.env['res.users'].browse(user_id)
+        user = self.env['jabin.user'].browse(user_id)
         if not user.exists():
             raise MissingError(f'User {user_id} not found.')
         user.write({'active': True, 'x_status': 'active'})
@@ -162,7 +162,7 @@ class UserService(models.AbstractModel):
         valid = {'active', 'suspended', 'pending', 'inactive'}
         if status not in valid:
             raise ValidationError(f'status must be one of {sorted(valid)}.')
-        user = self.env['res.users'].browse(user_id)
+        user = self.env['jabin.user'].browse(user_id)
         if not user.exists():
             raise MissingError(f'User {user_id} not found.')
         user.write({'x_status': status})

@@ -54,7 +54,7 @@ def _build_auth_decorator(func: Callable, *, optional: bool) -> Callable:
         if user_id is None:
             envelope = ResponseBuilder.unauthorized(message='Token does not contain a valid user identifier.')
             return self._build_response(envelope, status=401)
-        user = request.env['res.users'].browse(user_id)
+        user = request.env['jabin.user'].browse(user_id)
         if not user.exists():
             envelope = ResponseBuilder.unauthorized(message='Token references a non-existent user.')
             return self._build_response(envelope, status=401)

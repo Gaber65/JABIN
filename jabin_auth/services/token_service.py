@@ -95,7 +95,7 @@ class TokenService(models.AbstractModel):
             raise JWTError('Refresh token has been revoked. All sessions terminated for security.')
         token_row.revoke()
         # FIX: Add sudo() for anonymous access
-        user = self.env['res.users'].sudo().browse(user_id)
+        user = self.env['jabin.user'].sudo().browse(user_id)
         if not user.exists():
             raise JWTError('User no longer exists.')
         user_type = getattr(user, 'x_user_type', None) or 'customer'
