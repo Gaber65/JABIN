@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Window Action for Dashboard Configuration -->
+        <record id="action_jabin_dashboard" model="ir.actions.act_window">
+            <field name="name">Dashboards</field>
+            <field name="res_model">jabin.dashboard</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Add your first dashboard section
+                </p>
+                <p>
+                    Dashboard sections help organize your dashboard content.
+                </p>
+            </field>
+        </record>
+
+        <!-- Client Action for Dashboard View -->
+        <record id="action_jabin_dashboard_view" model="ir.actions.client">
+            <field name="name">Dashboard</field>
+            <field name="tag">jabin_dashboard.dashboard_view</field>
+            <field name="target">main</field>
+        </record>
+
+        <!-- Window Action for Dashboard Settings -->
+        <record id="action_jabin_dashboard_settings" model="ir.actions.act_window">
+            <field name="name">Dashboard Settings</field>
+            <field name="res_model">jabin.dashboard.setting</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+            <field name="view_id" ref="view_jabin_dashboard_settings"/>
+        </record>
+
+        <!-- Placeholder Actions for Menu Items -->
+        <record id="action_jabin_catalog_products" model="ir.actions.act_window">
+            <field name="name">Products</field>
+            <field name="res_model">ir.ui.view</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p>Products module coming soon</p>
+            </field>
+        </record>
+    </data>
+</odoo>

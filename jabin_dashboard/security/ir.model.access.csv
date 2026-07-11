@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_jabin_dashboard_all,access_dashboard_all,model_jabin_dashboard,,1,1,1,1
+access_jabin_dashboard_setting_all,access_dashboard_setting_all,model_jabin_dashboard_setting,,1,1,1,1

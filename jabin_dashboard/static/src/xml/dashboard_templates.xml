@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="jabin_dashboard.DashboardComponent">
+        <div class="jabin-dashboard-wrapper">
+            <div class="jabin-dashboard-container">
+                <!-- KPI Cards -->
+                <div class="kpi-grid row mb-4">
+                    <div class="col-md-4 col-sm-6 mb-3">
+                        <div class="card kpi-card h-100">
+                            <div class="card-body">
+                                <div class="kpi-icon kpi-icon-primary">
+                                    <i class="fa fa-shopping-cart fa-2x"/>
+                                </div>
+                                <div class="kpi-content">
+                                    <div class="kpi-title">Total Orders</div>
+                                    <div class="kpi-value"><t t-esc="formattedOrders"/></div>
+                                    <div class="kpi-progress mt-2">
+                                        <div class="progress" style="height: 5px;">
+                                            <div class="progress-bar progress-bar-primary" style="width: 85%" role="progressbar" aria-valuenow="85" aria-valuemin="0" aria-valuemax="100"></div>
+                                        </div>
+                                        <small class="text-muted">85% of target</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-sm-6 mb-3">
+                        <div class="card kpi-card h-100">
+                            <div class="card-body">
+                                <div class="kpi-icon kpi-icon-success">
+                                    <i class="fa fa-dollar-sign fa-2x"/>
+                                </div>
+                                <div class="kpi-content">
+                                    <div class="kpi-title">Total Revenue</div>
+                                    <div class="kpi-value"><t t-esc="formattedRevenue"/></div>
+                                    <div class="kpi-progress mt-2">
+                                        <div class="progress" style="height: 5px;">
+                                            <div class="progress-bar progress-bar-success" style="width: 82%" role="progressbar" aria-valuenow="82" aria-valuemin="0" aria-valuemax="100"></div>
+                                        </div>
+                                        <small class="text-muted">82% of target</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-sm-6 mb-3">
+                        <div class="card kpi-card h-100">
+                            <div class="card-body">
+                                <div class="kpi-icon kpi-icon-info">
+                                    <i class="fa fa-users fa-2x"/>
+                                </div>
+                                <div class="kpi-content">
+                                    <div class="kpi-title">Total Customers</div>
+                                    <div class="kpi-value"><t t-esc="formattedCustomers"/></div>
+                                    <div class="kpi-progress mt-2">
+                                        <div class="progress" style="height: 5px;">
+                                            <div class="progress-bar progress-bar-info" style="width: 71%" role="progressbar" aria-valuenow="71" aria-valuemin="0" aria-valuemax="100"></div>
+                                        </div>
+                                        <small class="text-muted">71% of target</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="card kpi-card h-100">
+                            <div class="card-body">
+                                <div class="kpi-icon kpi-icon-warning">
+                                    <i class="fa fa-boxes fa-2x"/>
+                                </div>
+                                <div class="kpi-content">
+                                    <div class="kpi-title">Total Products</div>
+                                    <div class="kpi-value"><t t-esc="formattedProducts"/></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="card kpi-card h-100">
+                            <div class="card-body">
+                                <div class="kpi-icon kpi-icon-danger">
+                                    <i class="fa fa-clock fa-2x"/>
+                                </div>
+                                <div class="kpi-content">
+                                    <div class="kpi-title">Pending Orders</div>
+                                    <div class="kpi-value"><t t-esc="formattedPendingOrders"/></div>
+                                    <div class="kpi-progress mt-2">
+                                        <div class="progress" style="height: 5px;">
+                                            <div class="progress-bar progress-bar-danger" style="width: 90%" role="progressbar" aria-valuenow="90" aria-valuemin="0" aria-valuemax="100"></div>
+                                        </div>
+                                        <small class="text-muted">90% of target</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-sm-6 mb-3">
+                        <div class="card kpi-card h-100">
+                            <div class="card-body">
+                                <div class="kpi-icon kpi-icon-danger">
+                                    <i class="fa fa-exclamation-triangle fa-2x"/>
+                                </div>
+                                <div class="kpi-content">
+                                    <div class="kpi-title">Low Stock</div>
+                                    <div class="kpi-value"><t t-esc="formattedLowStock"/></div>
+                                    <div class="kpi-subtitle">Items below safety stock level</div>
+                                    <div class="kpi-progress mt-2">
+                                        <div class="progress" style="height: 5px;">
+                                            <div class="progress-bar progress-bar-danger" style="width: 60%" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100"></div>
+                                        </div>
+                                        <small class="text-muted">60% of target</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dashboard Sections -->
+                <div class="row">
+                    <!-- Recent Orders -->
+                    <div class="col-lg-6 mb-4">
+                        <div class="card dashboard-card">
+                            <div class="card-header">
+                                <i class="fa fa-history"/>
+                                <span>Recent Orders</span>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-sm table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Order #</th>
+                                            <th>Customer</th>
+                                            <th>Date</th>
+                                            <th>Status</th>
+                                            <th class="text-right">Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr t-foreach="state.recentOrders" t-as="order" t-key="order_index">
+                                            <td><t t-esc="order.order_number"/></td>
+                                            <td><t t-esc="order.customer"/></td>
+                                            <td><t t-esc="order.date"/></td>
+                                            <td>
+                                                <span class="badge" t-attf-class="#{order.status === 'Completed' ? 'badge-success' : order.status === 'Processing' ? 'badge-warning' : 'badge-danger'}">
+                                                    <t t-esc="order.status"/>
+                                                </span>
+                                            </td>
+                                            <td class="text-right"><t t-esc="order.total"/></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Top Products -->
+                    <div class="col-lg-6 mb-4">
+                        <div class="card dashboard-card">
+                            <div class="card-header">
+                                <i class="fa fa-star"/>
+                                <span>Top Products</span>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-sm table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Product</th>
+                                            <th>Category</th>
+                                            <th class="text-right">Sales</th>
+                                            <th class="text-right">Units</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr t-foreach="state.topProducts" t-as="product" t-key="product_index">
+                                            <td><t t-esc="product.name"/></td>
+                                            <td><t t-esc="product.category"/></td>
+                                            <td class="text-right"><t t-esc="product.sales"/></td>
+                                            <td class="text-right"><t t-esc="product.units"/></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sales Chart -->
+                    <div class="col-lg-6 mb-4">
+                        <div class="card dashboard-card">
+                            <div class="card-header">
+                                <i class="fa fa-chart-line"/>
+                                <span>Sales Chart</span>
+                            </div>
+                            <div class="card-body">
+                                <div class="placeholder-chart">
+                                    <i class="fa fa-bar-chart fa-3x text-muted"/>
+                                    <p>Sales data visualization coming soon</p>
+                                    <div class="chart-data-preview">
+                                        <span t-foreach="state.salesData.labels || []" t-as="label" t-key="label_index">
+                                            <span class="badge badge-primary mr-1"><t t-esc="label"/></span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Inventory Summary -->
+                    <div class="col-lg-6 mb-4">
+                        <div class="card dashboard-card">
+                            <div class="card-header">
+                                <i class="fa fa-warehouse"/>
+                                <span>Inventory Summary</span>
+                            </div>
+                            <div class="card-body">
+                                <div class="inventory-stats">
+                                    <div class="inventory-item">
+                                        <span class="label">Total Items</span>
+                                        <span class="value"><t t-esc="state.inventoryData.total || 0"/></span>
+                                    </div>
+                                    <div class="inventory-item">
+                                        <span class="label">Low Stock</span>
+                                        <span class="value text-warning"><t t-esc="state.inventoryData.low_stock || 0"/></span>
+                                    </div>
+                                    <div class="inventory-item">
+                                        <span class="label">Out of Stock</span>
+                                        <span class="value text-danger"><t t-esc="state.inventoryData.out_of_stock || 0"/></span>
+                                    </div>
+                                    <div class="inventory-item">
+                                        <span class="label">Categories</span>
+                                        <span class="value"><t t-esc="state.inventoryData.categories || 0"/></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>
