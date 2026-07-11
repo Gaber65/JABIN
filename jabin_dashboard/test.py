@@ -1,70 +1,63 @@
 from pathlib import Path
 
-PROJECT_NAME = "jabin_dashboard"
+PROJECT_NAME = "jabin_catalog"
 
 FILES = [
-    "__manifest__.py",
+    # Root
     "__init__.py",
+    "__manifest__.py",
 
+    # Models
+    "models/__init__.py",
+    "models/category.py",
+    "models/product.py",
+    "models/product_image.py",
+    "models/cutting_option.py",
+    "models/packaging.py",
+    "models/excluded_part.py",
+
+    # Services
+    "services/__init__.py",
+    "services/category_service.py",
+    "services/product_service.py",
+    "services/cutting_option_service.py",
+    "services/packaging_service.py",
+    "services/excluded_part_service.py",
+
+    # Validators
+    "validators/__init__.py",
+    "validators/base_validator.py",
+    "validators/category_validator.py",
+    "validators/product_validator.py",
+
+    # Controllers
+    "controllers/__init__.py",
+    "controllers/category_controller.py",
+    "controllers/product_controller.py",
+    "controllers/cutting_option_controller.py",
+    "controllers/packaging_controller.py",
+    "controllers/excluded_part_controller.py",
+
+    # Views
+    "views/category_views.xml",
+    "views/product_views.xml",
+    "views/cutting_option_views.xml",
+    "views/packaging_views.xml",
+    "views/excluded_part_views.xml",
+    "views/menu_views.xml",
+
+    # Security
     "security/ir.model.access.csv",
+    "security/security_groups.xml",
 
-    "views/templates.xml",
-    "views/assets.xml",
+    # Data
+    "data/demo_data.xml",
 
-    "static/src/app.js",
+    # Static
+    "static/description/icon.png",
 
-    "static/src/components/layout/layout.js",
-    "static/src/components/layout/layout.xml",
-    "static/src/components/layout/layout.scss",
-
-    "static/src/components/sidebar/sidebar.js",
-    "static/src/components/sidebar/sidebar.xml",
-    "static/src/components/sidebar/sidebar.scss",
-    "static/src/components/sidebar/sidebar_item.js",
-    "static/src/components/sidebar/sidebar_item.xml",
-    "static/src/components/sidebar/sidebar_group.js",
-
-    "static/src/components/header/header.js",
-    "static/src/components/header/header.xml",
-    "static/src/components/header/header.scss",
-    "static/src/components/header/user_dropdown.js",
-    "static/src/components/header/notification_bell.js",
-
-    "static/src/components/ui/card/.gitkeep",
-    "static/src/components/ui/stat_card/.gitkeep",
-    "static/src/components/ui/breadcrumb/.gitkeep",
-    "static/src/components/ui/empty_state/.gitkeep",
-    "static/src/components/ui/loading_skeleton/.gitkeep",
-    "static/src/components/ui/chart_placeholder/.gitkeep",
-    "static/src/components/ui/table_placeholder/.gitkeep",
-
-    "static/src/components/pages/dashboard_page.js",
-    "static/src/components/pages/catalog_page.js",
-    "static/src/components/pages/orders_page.js",
-    "static/src/components/pages/customers_page.js",
-    "static/src/components/pages/marketing_page.js",
-    "static/src/components/pages/reports_page.js",
-    "static/src/components/pages/settings_page.js",
-
-    "static/src/services/navigation_registry.js",
-    "static/src/services/routing_service.js",
-    "static/src/services/theme_service.js",
-
-    "static/src/hooks/use_navigation.js",
-    "static/src/hooks/use_routing.js",
-    "static/src/hooks/use_theme.js",
-
-    "static/src/utils/constants.js",
-    "static/src/utils/helpers.js",
-
-    "static/src/styles/main.scss",
-    "static/src/styles/variables.scss",
-    "static/src/styles/mixins.scss",
-    "static/src/styles/global.scss",
-
-    "data/navigation_data.xml",
-
-    "README.md",
+    # Localization
+    "i18n/en.po",
 ]
 
 ROOT = Path(PROJECT_NAME)
@@ -76,7 +69,15 @@ for file in FILES:
     if not path.exists():
         path.touch()
 
-print("=" * 50)
-print(f"Project '{PROJECT_NAME}' created successfully!")
-print(f"Location: {ROOT.resolve()}")
-print("=" * 50)
+print("=" * 60)
+print(f"✅ Project '{PROJECT_NAME}' created successfully!")
+print(f"📂 Location : {ROOT.resolve()}")
+print(f"📄 Total Files : {len(FILES)}")
+print("=" * 60)
+
+print("\nGenerated Structure:\n")
+
+for p in sorted(ROOT.rglob("*")):
+    indent = "    " * (len(p.relative_to(ROOT).parts) - 1)
+    prefix = "📁" if p.is_dir() else "📄"
+    print(f"{indent}{prefix} {p.name}")
