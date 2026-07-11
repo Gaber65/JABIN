@@ -6,7 +6,6 @@ class JabinCategory(models.Model):
     _name = 'jabin.category'
     _description = 'JABIN Category'
     _order = 'sequence, name'
-    _inherit = ['jabin.core.mixin']  # Use core mixin if available
 
     name = fields.Char(string='Name', required=True, translate=True)
     image = fields.Binary(string='Image', attachment=True)

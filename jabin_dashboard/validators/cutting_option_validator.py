@@ -1,6 +1,6 @@
 from odoo import _
 from odoo.exceptions import ValidationError
-from jabin_core.validators import ValidationUtils
+from odoo.addons.jabin_core  import ValidationUtils
 
 
 class CuttingOptionValidator:

@@ -7,31 +7,30 @@ class JabinProduct(models.Model):
     _name = 'jabin.product'
     _description = 'JABIN Product'
     _order = 'name'
-    _inherit = ['mail.thread', 'mail.activity.mixin', 'jabin.core.mixin']
 
     # Basic Information
     category_id = fields.Many2one(
         'jabin.category',
         string='Category',
         required=True,
-        tracking=True
+        
     )
-    name = fields.Char(string='Name', required=True, translate=True, tracking=True)
+    name = fields.Char(string='Name', required=True, translate=True, )
     description = fields.Text(string='Description', translate=True)
-    sku = fields.Char(string='SKU', required=True, tracking=True)
-    barcode = fields.Char(string='Barcode', tracking=True)
+    sku = fields.Char(string='SKU', required=True, )
+    barcode = fields.Char(string='Barcode', )
 
     # Pricing
     purchase_price = fields.Float(
         string='Purchase Price',
         required=True,
-        tracking=True,
+        
         digits='Product Price'
     )
     selling_price = fields.Float(
         string='Selling Price',
         required=True,
-        tracking=True,
+        
         digits='Product Price'
     )
 
@@ -82,7 +81,7 @@ class JabinProduct(models.Model):
     stock_quantity = fields.Float(
         string='Stock Quantity',
         default=0.0,
-        tracking=True
+        
     )
     minimum_stock = fields.Float(
         string='Minimum Stock',
@@ -97,7 +96,7 @@ class JabinProduct(models.Model):
     main_image = fields.Binary(string='Main Image', attachment=True)
 
     # Status
-    active = fields.Boolean(string='Active', default=True, tracking=True)
+    active = fields.Boolean(string='Active', default=True, )
     is_available = fields.Boolean(
         string='Is Available',
         compute='_compute_is_available',

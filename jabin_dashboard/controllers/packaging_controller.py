@@ -1,6 +1,6 @@
 from odoo import http
 from odoo.http import request
-from jabin_core import ResponseBuilder
+from odoo.addons.jabin_core  import ResponseBuilder
 from ..services.packaging_service import PackagingService
 import json
 

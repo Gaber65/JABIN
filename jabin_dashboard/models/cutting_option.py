@@ -2,11 +2,10 @@ from odoo import api, fields, models, _
 from odoo.exceptions import ValidationError
 
 
-class JabinPackaging(models.Model):
-    _name = 'jabin.packaging'
-    _description = 'JABIN Packaging'
+class JabinCuttingOption(models.Model):
+    _name = 'jabin.cutting.option'
+    _description = 'JABIN Cutting Option'
     _order = 'name'
-    _inherit = ['jabin.core.mixin']
 
     name = fields.Char(string='Name', required=True, translate=True)
     description = fields.Text(string='Description', translate=True)
@@ -14,8 +13,8 @@ class JabinPackaging(models.Model):
 
     product_ids = fields.Many2many(
         'jabin.product',
-        'jabin_product_packaging_rel',
-        'packaging_id',
+        'jabin_product_cutting_rel',
+        'cutting_id',
         'product_id',
         string='Products'
     )
@@ -27,4 +26,4 @@ class JabinPackaging(models.Model):
                 ('name', '=', record.name),
                 ('id', '!=', record.id)
             ]) > 0:
-                raise ValidationError(_('Packaging name must be unique!'))
+                raise ValidationError(_('Cutting Option name must be unique!'))

@@ -1,7 +1,0 @@
-id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_jabin_category_user,jabin.category.user,model_jabin_category,base.group_user,1,1,1,1
-access_jabin_product_user,jabin.product.user,model_jabin_product,base.group_user,1,1,1,1
-access_jabin_product_image_user,jabin.product.image.user,model_jabin_product_image,base.group_user,1,1,1,1
-access_jabin_cutting_option_user,jabin.cutting.option.user,model_jabin_cutting_option,base.group_user,1,1,1,1
-access_jabin_packaging_user,jabin.packaging.user,model_jabin_packaging,base.group_user,1,1,1,1
-access_jabin_excluded_part_user,jabin.excluded.part.user,model_jabin_excluded_part,base.group_user,1,1,1,1

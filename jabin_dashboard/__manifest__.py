@@ -13,16 +13,23 @@
     'depends': [
         'base',
         'web',
-        'jabin_auth'
+        'jabin_core',
+        'jabin_auth',
     ],
     'data': [
-        # 'security/security_groups.xml',
         'security/ir.model.access.csv',
         'data/dashboard_data.xml',
         'views/dashboard_views.xml',  # Load views BEFORE actions
         'views/actions.xml',
         'views/menus.xml',
+        'views/category_views.xml',
+        'views/product_views.xml',
+        'views/cutting_option_views.xml',
+        'views/packaging_views.xml',
+        'views/excluded_part_views.xml',
+
     ],
+
     'assets': {
         'web.assets_backend': [
             'jabin_dashboard/static/src/css/dashboard.scss',
@@ -30,7 +37,9 @@
             'jabin_dashboard/static/src/xml/dashboard_templates.xml',
         ],
     },
-    'demo': [],
+    'demo': [
+        'data/demo_data.xml',  # or put it here if you want it as demo data
+    ],
     'license': 'LGPL-3',
     'installable': True,
     'auto_install': False,

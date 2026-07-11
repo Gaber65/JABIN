@@ -5,7 +5,6 @@ class JabinProductImage(models.Model):
     _name = 'jabin.product.image'
     _description = 'JABIN Product Image'
     _order = 'sequence, id'
-    _inherit = ['jabin.core.mixin']
 
     product_id = fields.Many2one(
         'jabin.product',

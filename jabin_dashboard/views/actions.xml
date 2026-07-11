@@ -31,15 +31,5 @@
             <field name="target">new</field>
             <field name="view_id" ref="view_jabin_dashboard_settings"/>
         </record>
-
-        <!-- Placeholder Actions for Menu Items -->
-        <record id="action_jabin_catalog_products" model="ir.actions.act_window">
-            <field name="name">Products</field>
-            <field name="res_model">ir.ui.view</field>
-            <field name="view_mode">tree,form</field>
-            <field name="help" type="html">
-                <p>Products module coming soon</p>
-            </field>
-        </record>
     </data>
 </odoo>

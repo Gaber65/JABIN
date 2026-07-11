@@ -1,7 +1,7 @@
 from odoo import _
 from odoo.exceptions import ValidationError
-# Import validation utilities from jabin_core
-from jabin_core.validators import BaseValidator, ValidationUtils
+# Import validation utilities from odoo.addons.jabin_core 
+from odoo.addons.jabin_core  import  ValidationUtils
 
 
 class CategoryValidator:

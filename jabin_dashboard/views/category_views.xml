@@ -25,18 +25,7 @@
                     <button name="toggle_active" string="Toggle Active" type="object" class="oe_highlight"/>
                 </header>
                 <sheet>
-                    <div class="oe_button_box" name="button_box">
-                        <button name="%(jabin_catalog.action_jabin_product)d"
-                                type="action"
-                                class="oe_stat_button"
-                                icon="fa-list"
-                                context="{'default_category_id': active_id}">
-                            <div class="o_stat_info">
-                                <field name="product_count" widget="integer"/>
-                                <span class="o_stat_text">Products</span>
-                            </div>
-                        </button>
-                    </div>
+
                     <div class="oe_title">
                         <label for="name" string="Category Name"/>
                         <h1>

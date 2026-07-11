@@ -27,3 +27,4 @@ from .timestamp_mixin import TimestampMixin  # noqa: F401
 from .audit_mixin import AuditMixin  # noqa: F401
 from .active_mixin import ActiveMixin  # noqa: F401
 from .soft_delete_mixin import SoftDeleteMixin  # noqa: F401
+from .core_mixin import JabinCoreMixin

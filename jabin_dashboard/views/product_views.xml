@@ -1,5 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- Product Images Action -->
+    <record id="action_jabin_product_images" model="ir.actions.act_window">
+        <field name="name">Product Images</field>
+        <field name="res_model">jabin.product.image</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('product_id','=',active_id)]</field>
+        <field name="context">{'default_product_id': active_id}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Add images to this product
+            </p>
+        </field>
+    </record>
+
     <!-- Product Tree View -->
     <record id="view_jabin_product_tree" model="ir.ui.view">
         <field name="name">jabin.product.tree</field>
@@ -13,6 +27,7 @@
                 <field name="offer_price"/>
                 <field name="is_on_offer"/>
                 <field name="stock_quantity"/>
+                <field name="minimum_stock" invisible="1"/>
                 <field name="is_available"/>
                 <field name="is_featured"/>
                 <field name="is_best_seller"/>
@@ -28,8 +43,8 @@
         <field name="arch" type="xml">
             <form string="Product">
                 <header>
-                    <button name="action_activate" string="Activate" type="object" class="oe_highlight" attrs="{'invisible': [('active','=',True)]}"/>
-                    <button name="action_deactivate" string="Deactivate" type="object" attrs="{'invisible': [('active','=',False)]}"/>
+                    <button name="action_activate" string="Activate" type="object" class="oe_highlight" invisible="active == True"/>
+                    <button name="action_deactivate" string="Deactivate" type="object" invisible="active == False"/>
                     <button name="action_update_stock" string="Update Stock" type="object" class="oe_highlight"/>
                     <field name="active" invisible="True"/>
                 </header>
@@ -41,7 +56,7 @@
                                 icon="fa-image"
                                 context="{'default_product_id': active_id}">
                             <div class="o_stat_info">
-                                <field name="product_image_ids" widget="integer"/>
+                                <field name="product_image_ids" widget="many2many_tags"/>
                                 <span class="o_stat_text">Images</span>
                             </div>
                         </button>
@@ -76,11 +91,11 @@
                         </group>
                         <group>
                             <field name="discount_type"/>
-                            <field name="discount_value" attrs="{'invisible': [('discount_type','=',False)]}"/>
+                            <field name="discount_value" invisible="discount_type == False"/>
                             <field name="offer_price" widget="monetary" options="{'currency_field': 'currency_id'}"/>
                             <field name="is_on_offer"/>
-                            <field name="offer_start_date" attrs="{'required': [('is_on_offer','=',True)]}"/>
-                            <field name="offer_end_date" attrs="{'required': [('is_on_offer','=',True)]}"/>
+                            <field name="offer_start_date" required="is_on_offer == True"/>
+                            <field name="offer_end_date" required="is_on_offer == True"/>
                         </group>
                     </group>
                     <group string="Stock &amp; Details">

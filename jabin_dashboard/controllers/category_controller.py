@@ -1,13 +1,13 @@
-from jabin_core import ResponseBuilder
+from ..services.category_service import CategoryService
+from odoo.addons.jabin_core import ResponseBuilder
 from odoo import http
 from odoo.http import request
-from ..services.category_service import CategoryService
 import json
 
 
 class CategoryController(http.Controller):
 
-    @http.route('/api/catalog/category/create', type='json', auth='user', methods=['POST'])
+    @http.route('/api/catalog/category/create', type="http",  auth="public", methods=['POST'])
     def create_category(self, **kwargs):
         """Create a new category"""
         try:
@@ -30,7 +30,7 @@ class CategoryController(http.Controller):
             # Global Exception Handler will catch this
             raise
 
-    @http.route('/api/catalog/category/<int:category_id>', type='json', auth='user', methods=['GET'])
+    @http.route('/api/catalog/category/<int:category_id>', type="http",  auth="public", methods=['GET'])
     def get_category(self, category_id):
         """Get a single category"""
         category = CategoryService.get_category(request.env, category_id)
@@ -54,7 +54,7 @@ class CategoryController(http.Controller):
             }
         )
 
-    @http.route('/api/catalog/categories', type='json', auth='user', methods=['GET'])
+    @http.route('/api/catalog/categories', type="http",  auth="public", methods=['GET'])
     def get_categories(self, limit=100, offset=0, active=None):
         """Get list of categories"""
         domain = []
@@ -84,7 +84,7 @@ class CategoryController(http.Controller):
             }
         )
 
-    @http.route('/api/catalog/category/<int:category_id>', type='json', auth='user', methods=['PUT'])
+    @http.route('/api/catalog/category/<int:category_id>', type="http",  auth="public", methods=['PUT'])
     def update_category(self, category_id, **kwargs):
         """Update a category"""
         vals = json.loads(request.httprequest.data) if request.httprequest.data else kwargs
@@ -101,7 +101,7 @@ class CategoryController(http.Controller):
             message='Category updated successfully'
         )
 
-    @http.route('/api/catalog/category/<int:category_id>', type='json', auth='user', methods=['DELETE'])
+    @http.route('/api/catalog/category/<int:category_id>', type="http",  auth="public", methods=['DELETE'])
     def delete_category(self, category_id):
         """Delete a category"""
         CategoryService.delete_category(request.env, category_id)

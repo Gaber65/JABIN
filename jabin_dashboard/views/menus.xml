@@ -1,33 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
-        <!-- Main JABIN Menu -->
         <menuitem id="menu_jabin_root"
                   name="JABIN"
                   sequence="10"
                   web_icon="jabin_dashboard,static/description/icon.png"/>
 
-        <!-- Dashboard Menu -->
         <menuitem id="menu_jabin_dashboard"
                   name="Dashboard"
                   parent="menu_jabin_root"
                   action="action_jabin_dashboard_view"
-                  sequence="10"
-        />
+                  sequence="10"/>
 
+        <menuitem id="menu_jabin_products"
+                  name="Products"
+                  parent="menu_jabin_root"
+                  sequence="20"/>
 
+        <menuitem id="menu_jabin_product"
+                  name="Products"
+                  parent="menu_jabin_products"
+                  action="action_jabin_product"
+                  sequence="10"/>
 
+        <menuitem id="menu_jabin_category"
+                  name="Categories"
+                  parent="menu_jabin_products"
+                  action="action_jabin_category"
+                  sequence="20"/>
 
+        <menuitem id="menu_jabin_configuration"
+                  name="Configuration"
+                  parent="menu_jabin_root"
+                  sequence="30"/>
 
+        <menuitem id="menu_jabin_cutting_option"
+                  name="Cutting Options"
+                  parent="menu_jabin_configuration"
+                  action="action_jabin_cutting_option"
+                  sequence="10"/>
 
-        <!-- Placeholder Actions for Menu Items -->
-        <record id="action_jabin_catalog_products" model="ir.actions.act_window">
-            <field name="name">Products</field>
-            <field name="res_model">ir.ui.view</field>
-            <field name="view_mode">tree,form</field>
-            <field name="help" type="html">
-                <p>Products module coming soon</p>
-            </field>
-        </record>
+        <menuitem id="menu_jabin_packaging"
+                  name="Packaging Options"
+                  parent="menu_jabin_configuration"
+                  action="action_jabin_packaging"
+                  sequence="20"/>
+
+        <menuitem id="menu_jabin_excluded_part"
+                  name="Excluded Parts"
+                  parent="menu_jabin_configuration"
+                  action="action_jabin_excluded_part"
+                  sequence="30"/>
+
+        <menuitem id="menu_jabin_dashboard_settings"
+                  name="Dashboard Settings"
+                  parent="menu_jabin_configuration"
+                  action="action_jabin_dashboard_settings"
+                  sequence="40"/>
     </data>
 </odoo>
