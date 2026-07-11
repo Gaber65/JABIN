@@ -1,18 +1,21 @@
 from __future__ import annotations
 import secrets
 import string
-from datetime import  timedelta
+from datetime import timedelta
 from typing import TYPE_CHECKING, Optional, Tuple
-from odoo import api, models,fields
-from odoo.exceptions import ValidationError
-from odoo.addons.jabin_core import JabinLogger
 
+from odoo.addons.jabin_core import JabinLogger
+from odoo import api, models, fields
+from odoo.exceptions import ValidationError
+from psycopg2 import IntegrityError
+
+# Initialize logger properly
+_logger = None
 
 
 def _get_logger():
     global _logger
     if _logger is None:
-        from odoo.addons.jabin_core import JabinLogger
         _logger = JabinLogger.get('otp.service')
     return _logger
 
@@ -40,25 +43,20 @@ class OtpService(models.AbstractModel):
         """Generate a random OTP code."""
         return ''.join(secrets.choice(OtpService.OTP_CHARACTERS) for _ in range(length))
 
-    @staticmethod
-    def generate_otp_hash(code: str) -> str:
+    @api.model
+    def generate_otp_hash(self, code: str) -> str:
         """Generate a secure hash for an OTP code."""
-        return models.execute_kw(
-            'jabin.otp',
-            'static',
-            '_hash_code',
-            [code],
-            {'code': code}
-        )
+        OTP = self.env['jabin.otp']
+        return OTP._hash_code(code)
 
     # -- OTP Creation ------------------------------------------------------ #
     @api.model
     def create_otp(
-        self,
-        email: str,
-        purpose: str,
-        user_id: Optional[int] = None,
-        invalidate_existing: bool = True
+            self,
+            email: str,
+            purpose: str,
+            user_id: Optional[int] = None,
+            invalidate_existing: bool = True
     ) -> Tuple[str, str]:
         """Create a new OTP for the given email and purpose."""
         if not email:
@@ -69,9 +67,13 @@ class OtpService(models.AbstractModel):
         # Normalize email
         email = email.strip().lower()
 
-        # Invalidate existing OTPs for this email and purpose - MUST use sudo()
+        # Invalidate existing OTPs for this email and purpose
         if invalidate_existing:
+            # Delete existing OTPs to avoid unique constraint violations
             self.invalidate_existing_otps(email, purpose)
+
+            # Force a database commit to ensure deletion is complete
+            self.env.cr.commit()
 
         # Generate OTP
         plain_code = self.generate_otp()
@@ -102,6 +104,34 @@ class OtpService(models.AbstractModel):
                 purpose,
                 extra={'email': email, 'purpose': purpose}
             )
+        except IntegrityError as exc:
+            # If we still get a duplicate, try one more time with a fresh deletion
+            self.env.cr.rollback()
+            _get_logger().warning(
+                'Duplicate OTP detected, forcing cleanup and retry: %s',
+                email
+            )
+            # Force delete any existing OTPs
+            OTP.search([
+                ('email', '=', email),
+                ('purpose', '=', purpose),
+                ('verified', '=', False)
+            ]).unlink()
+            self.env.cr.commit()
+
+            # Try creating again
+            try:
+                OTP.create(otp_data)
+                _get_logger().audit(
+                    'OTP created after cleanup: email=%s purpose=%s',
+                    email,
+                    purpose,
+                    extra={'email': email, 'purpose': purpose}
+                )
+            except Exception as retry_exc:
+                _get_logger().error('Failed to create OTP after cleanup: %s', retry_exc)
+                raise ValidationError(f'Failed to create OTP: {retry_exc}')
+
         except Exception as exc:
             _get_logger().error('Failed to create OTP: %s', exc)
             raise ValidationError(f'Failed to create OTP: {exc}')
@@ -110,10 +140,10 @@ class OtpService(models.AbstractModel):
 
     @api.model
     def create_and_send_otp(
-        self,
-        email: str,
-        purpose: str,
-        user_id: Optional[int] = None
+            self,
+            email: str,
+            purpose: str,
+            user_id: Optional[int] = None
     ) -> str:
         """Create an OTP and send it via email."""
         plain_code, code_hash = self.create_otp(email, purpose, user_id)
@@ -130,6 +160,7 @@ class OtpService(models.AbstractModel):
             )
         except Exception as exc:
             _get_logger().error('Failed to send OTP email: %s', exc)
+            # Don't raise here - we want to return the code even if email fails
             pass
 
         return plain_code
@@ -137,10 +168,10 @@ class OtpService(models.AbstractModel):
     # -- OTP Verification -------------------------------------------------- #
     @api.model
     def verify_otp(
-        self,
-        email: str,
-        code: str,
-        purpose: str
+            self,
+            email: str,
+            code: str,
+            purpose: str
     ) -> bool:
         """Verify an OTP code."""
         if not email or not code or not purpose:
@@ -180,7 +211,7 @@ class OtpService(models.AbstractModel):
             )
             return False
 
-        # Verify the code
+        # Verify the code - use the model's static method
         if not OTP._verify_hash(code, otp.code_hash):
             otp.increment_attempts()
             _get_logger().audit(
@@ -227,10 +258,10 @@ class OtpService(models.AbstractModel):
 
     @api.model
     def resend_otp(
-        self,
-        email: str,
-        purpose: str,
-        user_id: Optional[int] = None
+            self,
+            email: str,
+            purpose: str,
+            user_id: Optional[int] = None
     ) -> Tuple[bool, str]:
         """Resend OTP for an email and purpose."""
         can_resend, reason = self.can_resend_otp(email, purpose)
@@ -271,7 +302,8 @@ class OtpService(models.AbstractModel):
             'resend_count': active_otp.resend_count,
             'can_verify': active_otp.can_verify(),
             'can_resend': self.can_resend_otp(email, purpose)[0],
-            'expires_in': max(0, (active_otp.expires_at - fields.Datetime.now()).total_seconds()) if not active_otp.is_expired() else 0
+            'expires_in': max(0, (
+                        active_otp.expires_at - fields.Datetime.now()).total_seconds()) if not active_otp.is_expired() else 0
         }
 
     @api.model

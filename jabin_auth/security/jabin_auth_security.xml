@@ -80,32 +80,16 @@
         <!-- Access rights: Service AbstractModels (no DB table)          -->
         <!-- ============================================================== -->
 
-        <record id="jabin_password_service_access" model="ir.model.access">
-            <field name="name">jabin.password.service: no-table access</field>
-            <field name="model_id" ref="model_jabin_password_service"/>
-            <field name="perm_read" eval="1"/>
-            <field name="perm_write" eval="0"/>
-            <field name="perm_create" eval="0"/>
-            <field name="perm_unlink" eval="0"/>
-        </record>
 
         <record id="jabin_token_service_access" model="ir.model.access">
             <field name="name">jabin.token.service: no-table access</field>
-            <field name="model_id" ref="model_jabin_token_service"/>
+            <field name="model_id" ref="model_jabin_auth_token_service"/>
             <field name="perm_read" eval="1"/>
             <field name="perm_write" eval="0"/>
             <field name="perm_create" eval="0"/>
             <field name="perm_unlink" eval="0"/>
         </record>
 
-        <record id="jabin_auth_service_access" model="ir.model.access">
-            <field name="name">jabin.auth.service: no-table access</field>
-            <field name="model_id" ref="model_jabin_auth_service"/>
-            <field name="perm_read" eval="1"/>
-            <field name="perm_write" eval="0"/>
-            <field name="perm_create" eval="0"/>
-            <field name="perm_unlink" eval="0"/>
-        </record>
 
         <record id="jabin_otp_service_access" model="ir.model.access">
             <field name="name">jabin.otp.service: no-table access</field>
@@ -125,14 +109,7 @@
             <field name="perm_unlink" eval="0"/>
         </record>
 
-        <record id="jabin_profile_completion_service_access" model="ir.model.access">
-            <field name="name">jabin.profile.completion.service: no-table access</field>
-            <field name="model_id" ref="model_jabin_profile_completion_service"/>
-            <field name="perm_read" eval="1"/>
-            <field name="perm_write" eval="0"/>
-            <field name="perm_create" eval="0"/>
-            <field name="perm_unlink" eval="0"/>
-        </record>
+
 
         <!-- User group definition -->
         <record id="group_jabin_user" model="res.groups">

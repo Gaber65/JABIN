@@ -1,20 +1,21 @@
-from __future__ import annotations
-from odoo import fields, models
-from odoo.addons.jabin_core import JabinLogger
-_logger = JabinLogger.get('security.res_users')
+# addons/jabin_security/models/security_context.py
+from odoo import models
 
-class JabinUserSecurity(models.Model):
-    _inherit = 'jabin.user'
-    _description = 'JABIN User Security Extension'
-    x_jabin_role_ids = fields.Many2many(comodel_name='jabin.role', relation='jabin_role_user_rel', column1='user_id', column2='role_id', string='JABIN Roles', help='RBAC roles assigned to this user.')
 
-    def get_role_codes(self) -> list:
-        self.ensure_one()
-        return self.x_jabin_role_ids.mapped('code')
+class SecurityContext(models.AbstractModel):
+    _name = 'jabin.security.context'
+    _description = 'Security Context'
 
-    def get_permission_codes(self) -> set:
-        self.ensure_one()
-        if not self.x_jabin_role_ids:
-            return set()
-        perms = self.x_jabin_role_ids.mapped('permission_ids.code')
-        return set(perms)
+    def get_current_user(self):
+        """
+        Retrieve the currently authenticated user.
+        Updated to lookup jabin.user instead of res.users.
+        """
+        # Assuming JWT middleware injects the user_id into the context
+        user_id = self.env.context.get('jwt_user_id')
+        if not user_id:
+            return None
+
+        # GREENFIELD CHANGE: Lookup jabin.user
+        user = self.env['jabin.user'].browse(user_id).exists()
+        return user if user else None

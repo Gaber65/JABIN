@@ -3,17 +3,19 @@ import hashlib
 import secrets
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any, Optional
-from odoo import api, fields, models
-from odoo.exceptions import ValidationError
 
 from odoo.addons.jabin_core import JabinLogger
+from odoo import api, fields, models
+from odoo.exceptions import ValidationError
+from odoo.tools import mute_logger
 
+# Initialize logger properly
+_logger = None
 
 
 def _get_logger():
     global _logger
     if _logger is None:
-        from odoo.addons.jabin_core import JabinLogger
         _logger = JabinLogger.get('otp.model')
     return _logger
 
@@ -26,7 +28,8 @@ class OTPPurpose:
     EMAIL_CHANGE = 'email_change'
 
     @classmethod
-    def get_selection(cls) -> list:
+    def get_selection(cls):
+        """Get selection list for OTP purposes."""
         return [
             (cls.REGISTER, 'Registration'),
             (cls.LOGIN, 'Login'),
@@ -60,7 +63,7 @@ class JabinOTP(models.Model):
         help='Related user record. Null for new registrations.'
     )
     purpose = fields.Selection(
-        selection=OTPPurpose.get_selection,
+        selection=lambda self: self._get_purpose_selection(),
         string='Purpose',
         required=True,
         index=True,
@@ -127,10 +130,16 @@ class JabinOTP(models.Model):
 
     # -- Constraints ------------------------------------------------------- #
     _sql_constraints = [
+        # Only enforce uniqueness for unverified OTPs
         ('email_purpose_active',
-         'UNIQUE(email, purpose, verified)',
+         'UNIQUE(email, purpose) WHERE verified = false',
          'Only one active (unverified) OTP per email and purpose is allowed.'),
     ]
+    # -- Helper Methods ---------------------------------------------------- #
+    @api.model
+    def _get_purpose_selection(self):
+        """Get the purpose selection list."""
+        return OTPPurpose.get_selection()
 
     # -- Default Values ---------------------------------------------------- #
     @api.model
@@ -147,6 +156,7 @@ class JabinOTP(models.Model):
     def cleanup_expired_otps_cron(self) -> int:
         """Scheduled action to clean up expired OTPs."""
         return self.env['jabin.otp.service'].cleanup_expired_otps()
+
     # -- Security Methods -------------------------------------------------- #
     @staticmethod
     def _hash_code(code: str) -> str:
@@ -172,8 +182,9 @@ class JabinOTP(models.Model):
 
     # -- CRUD Overrides ---------------------------------------------------- #
     @api.model
-    def create(self, vals_list: list) -> 'JabinOTP':
+    def create(self, vals_list) -> 'JabinOTP':
         """Override create to set default values and hash the code."""
+        # Convert single dict to list if needed
         if isinstance(vals_list, dict):
             vals_list = [vals_list]
 
@@ -211,9 +222,9 @@ class JabinOTP(models.Model):
         for record in records:
             _get_logger().audit(
                 'OTP created: email=%s purpose=%s',
-                record.login,
+                record.email,
                 record.purpose,
-                extra={'email': record.login, 'purpose': record.purpose}
+                extra={'email': record.email, 'purpose': record.purpose}
             )
         return records
 
@@ -224,9 +235,9 @@ class JabinOTP(models.Model):
             for record in self:
                 _get_logger().audit(
                     'OTP verified: email=%s purpose=%s',
-                    record.login,
+                    record.email,
                     record.purpose,
-                    extra={'email': record.login, 'purpose': record.purpose}
+                    extra={'email': record.email, 'purpose': record.purpose}
                 )
 
         if 'resend_count' in vals and vals['resend_count'] > self.resend_count:
@@ -269,22 +280,33 @@ class JabinOTP(models.Model):
 
     @api.model
     def invalidate_all_for_email(self, email: str, purpose: Optional[str] = None) -> int:
-        """Invalidate all OTPs for an email (optionally filtered by purpose)."""
+        """
+        Invalidate all OTPs for an email (optionally filtered by purpose).
+        This deletes the OTP records instead of just marking them expired
+        to avoid unique constraint violations.
+        """
         domain = [('email', '=', email), ('verified', '=', False)]
         if purpose:
             domain.append(('purpose', '=', purpose))
+
+        # Find all active OTPs
         records = self.search(domain)
+        count = len(records)
+
         if records:
-            records.write({'expires_at': fields.Datetime.to_string(
-                fields.Datetime.now() - timedelta(seconds=1)
-            )})
+            # Delete the records instead of updating them
+            # This ensures no unique constraint violations
+            records.unlink()
+
             _get_logger().audit(
-                'Invalidated %d OTPs for email=%s',
-                len(records),
+                'Deleted %d OTPs for email=%s purpose=%s',
+                count,
                 email,
-                extra={'email': email, 'count': len(records)}
+                purpose or 'all',
+                extra={'email': email, 'count': count, 'purpose': purpose}
             )
-        return len(records)
+
+        return count
 
     # -- Utility Methods --------------------------------------------------- #
     def is_expired(self) -> bool:

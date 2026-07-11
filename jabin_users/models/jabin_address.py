@@ -11,7 +11,7 @@ class JabinUserAddress(models.Model):
     user_id = fields.Many2one(comodel_name='jabin.user', string='User', required=True, ondelete='cascade', index=True, help='The JABIN user who owns this address.')
     x_user_name = fields.Char(related='user_id.name', string='User Name', store=True, readonly=True)
     title = fields.Char(string='Title', required=True, help="Short label for the address (e.g. 'Home', 'Office', 'Warehouse').")
-    recipient_name = fields.Char(string='Recipient Name', requireduser_id =True, help='Name of the person who will receive deliveries at this address.')
+    recipient_name = fields.Char(string='Recipient Name', required =True, help='Name of the person who will receive deliveries at this address.')
     x_recipient_phone = fields.Char(string='Recipient Phone', help="Contact phone for the recipient (may differ from the user's phone).")
     country_id = fields.Many2one(comodel_name='res.country', string='Country', required=True, help='Country of the delivery address.')
     city = fields.Char(string='City', required=True, index=True, help='City / town.')
