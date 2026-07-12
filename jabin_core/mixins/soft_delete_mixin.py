@@ -9,7 +9,7 @@ class SoftDeleteMixin(models.AbstractModel):
                                 help='Marks the record as soft-deleted (kept for audit).')
     deleted_at = fields.Datetime(string='Deleted At', readonly=True,
                                  help='Timestamp at which the record was soft-deleted (UTC).')
-    deleted_by = fields.Many2one(comodel_name='jabin.user', string='Deleted By', readonly=True,
+    deleted_by = fields.Many2one(comodel_name='res.users', string='Deleted By', readonly=True,
                                  help='User who soft-deleted the record.')
 
     def soft_delete(self) -> None:

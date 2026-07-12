@@ -1,63 +1,61 @@
-from __future__ import annotations
-from typing import Any, Dict, List, Optional
-_CTX_KEY: str = 'jabin_security_ctx'
+# addons/jabin_security/models/security_context.py
+from odoo import models
 
-class SecurityContext:
-    __slots__ = ('user_id', 'user_type', 'email', 'roles', 'permissions', 'token_id', 'is_authenticated', 'is_admin')
 
-    def __init__(self, *, user_id: Optional[int]=None, user_type: Optional[str]=None, email: Optional[str]=None, roles: Optional[List[str]]=None, permissions: Optional[set]=None, token_id: Optional[str]=None) -> None:
-        self.user_id: Optional[int] = user_id
-        self.user_type: Optional[str] = user_type
-        self.email: Optional[str] = email
-        self.roles: List[str] = list(roles) if roles else []
-        self.permissions: set = set(permissions) if permissions else set()
-        self.token_id: Optional[str] = token_id
-        self.is_authenticated: bool = user_id is not None
-        self.is_admin: bool = user_type == 'admin'
+class SecurityContext(models.AbstractModel):
+    _name = 'jabin.security.context'
+    _description = 'Security Context'
 
-    def has_permission(self, code: str) -> bool:
-        if self.is_admin:
-            return True
-        return code in self.permissions
+    def get_current_user(self):
+        """
+        Retrieve the currently authenticated user.
+        Now looks up res.users instead of res.users.
+        """
+        # Assuming JWT middleware injects the user_id into the context
+        user_id = self.env.context.get('jwt_user_id')
+        if not user_id:
+            return None
 
-    def has_any_permission(self, codes: List[str]) -> bool:
-        if self.is_admin:
-            return True
-        return any((c in self.permissions for c in codes))
+        # Use res.users instead of res.users
+        user = self.env['res.users'].browse(user_id).exists()
+        return user if user else None
 
-    def has_all_permissions(self, codes: List[str]) -> bool:
-        if self.is_admin:
-            return True
-        return all((c in self.permissions for c in codes))
+    def get_current_user_id(self):
+        """
+        Get the ID of the currently authenticated user.
+        """
+        return self.env.context.get('jwt_user_id')
 
-    def has_role(self, role_code: str) -> bool:
-        return role_code in self.roles
+    def is_authenticated(self):
+        """
+        Check if there is an authenticated user.
+        """
+        return bool(self.env.context.get('jwt_user_id'))
 
-    def to_dict(self) -> Dict[str, Any]:
-        return {'user_id': self.user_id, 'user_type': self.user_type, 'email': self.email, 'roles': list(self.roles), 'permission_count': len(self.permissions), 'token_id': self.token_id, 'is_authenticated': self.is_authenticated, 'is_admin': self.is_admin}
+    def get_current_user_permissions(self):
+        """
+        Get the permissions of the currently authenticated user.
+        """
+        user = self.get_current_user()
+        if not user:
+            return set()
 
-    def __repr__(self) -> str:
-        return f'SecurityContext(user_id={self.user_id}, user_type={self.user_type!r}, is_admin={self.is_admin}, roles={self.roles}, permissions={len(self.permissions)})'
+        # Get permissions through roles
+        roles = self.env['jabin.role'].search([
+            ('user_ids', 'in', user.id)
+        ])
+        permissions = roles.mapped('permission_ids')
+        return set(permissions.mapped('code'))
 
-    @classmethod
-    def anonymous(cls) -> 'SecurityContext':
-        return cls()
+    def get_current_user_roles(self):
+        """
+        Get the roles of the currently authenticated user.
+        """
+        user = self.get_current_user()
+        if not user:
+            return []
 
-    @classmethod
-    def set(cls, ctx: 'SecurityContext') -> None:
-        try:
-            from odoo.http import request
-            request.env.context = {**request.env.context, _CTX_KEY: ctx}
-        except Exception:
-            pass
-
-    @classmethod
-    def get(cls) -> 'SecurityContext':
-        try:
-            from odoo.http import request
-            ctx = request.env.context.get(_CTX_KEY)
-            if ctx is not None:
-                return ctx
-        except Exception:
-            pass
-        return cls.anonymous()
+        roles = self.env['jabin.role'].search([
+            ('user_ids', 'in', user.id)
+        ])
+        return roles.mapped('code')

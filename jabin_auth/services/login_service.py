@@ -24,7 +24,7 @@ class LoginService(models.AbstractModel):
         Raises:
             ValidationError: If user not found or account is blocked
         """
-        User = self.env['jabin.user']
+        User = self.env['res.users']  # Changed from res.users
         OTPService = self.env['jabin.otp.service']
 
         if not email:
@@ -88,7 +88,7 @@ class LoginService(models.AbstractModel):
         Raises:
             ValidationError: If OTP is invalid or user status is invalid
         """
-        User = self.env['jabin.user']
+        User = self.env['res.users']  # Changed from res.users
         OTPService = self.env['jabin.otp.service']
         TokenService = self.env['jabin.auth.token.service']
 
@@ -150,7 +150,7 @@ class LoginService(models.AbstractModel):
         Returns:
             dict: Contains expires_in seconds
         """
-        User = self.env['jabin.user']
+        User = self.env['res.users']  # Changed from res.users
         OTPService = self.env['jabin.otp.service']
 
         if not email:

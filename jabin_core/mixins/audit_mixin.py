@@ -11,8 +11,8 @@ if _ODOO:
     class AuditMixin(models.AbstractModel):
         _name = 'jabin.audit.mixin'
         _description = 'JABIN Audit Mixin'
-        created_by = fields.Many2one(comodel_name='jabin.user', string='Created By', readonly=True, help='User who created the record.')
-        updated_by = fields.Many2one(comodel_name='jabin.user', string='Last Updated By', readonly=True, help='User who last updated the record.')
+        created_by = fields.Many2one(comodel_name='res.users', string='Created By', readonly=True, help='User who created the record.')
+        updated_by = fields.Many2one(comodel_name='res.users', string='Last Updated By', readonly=True, help='User who last updated the record.')
 
         def create(self, vals_list):
             user_id = self.env.user.id

@@ -101,7 +101,7 @@ def require_token() -> Optional[Response]:
         return _unauthorized("Unauthorized")
 
     try:
-        user = request.env["jabin.user"].sudo().browse(user_id)
+        user = request.env["res.users"].sudo().browse(user_id)  # Changed from res.users
         if not user.exists():
             return _unauthorized("Unauthorized")
     except Exception:

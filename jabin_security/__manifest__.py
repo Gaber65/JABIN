@@ -24,6 +24,7 @@ Provides:
     "data": [
         "security/jabin_security_security.xml",
         "security/jabin_security_data.xml",
+        
     ],
     "assets": {},
     "installable": True,

@@ -254,4 +254,3 @@ class AuthController(BaseApiController):
 
         except Exception as exc:
             return self._handle_server_error("Login verify", exc)
-

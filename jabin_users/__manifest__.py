@@ -10,20 +10,19 @@ JABIN Users
 User-management domain for the JABIN ERP platform.
 
 Provides:
-    * Extended jabin.user with JABIN business fields (user type, balance,
+    * Extended res.users with JABIN business fields (user type, balance,
       status, phone, avatar, last login).
-    * Multi-address model (jabin.user.address).
+    * Multi-address model (res.users.address).
     * REST APIs under /api/v1/users and /api/v1/addresses.
     * Service layer keeping business logic out of controllers.
 
-User types: Admin, Customer, Manager, Employee, Driver.
+    User types: Admin, Customer, Manager, Employee, Driver.
     """,
     "author": "JABIN Engineering",
     "website": "https://github.com/Gaber65/JABIN",
     "license": "Other proprietary",
     "depends": ["base", "jabin_core"],
     "data": [
-        "security/security.xml",
         "security/ir.model.access.csv",
     ],
     "assets": {},

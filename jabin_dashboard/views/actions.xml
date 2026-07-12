@@ -31,5 +31,50 @@
             <field name="target">new</field>
             <field name="view_id" ref="view_jabin_dashboard_settings"/>
         </record>
+
+        <!-- Window Action for Products - Using custom model -->
+        <record id="action_jabin_product" model="ir.actions.act_window">
+            <field name="name">Products</field>
+            <field name="res_model">jabin.product</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Manage your products
+                </p>
+            </field>
+        </record>
+
+        <!-- Window Action for Categories - Using custom model -->
+        <record id="action_jabin_category" model="ir.actions.act_window">
+            <field name="name">Categories</field>
+            <field name="res_model">jabin.category</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Manage product categories
+                </p>
+            </field>
+        </record>
+
+        <!-- Window Action for Cutting Options -->
+        <record id="action_jabin_cutting_option" model="ir.actions.act_window">
+            <field name="name">Cutting Options</field>
+            <field name="res_model">jabin.cutting.option</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <!-- Window Action for Packaging Options -->
+        <record id="action_jabin_packaging" model="ir.actions.act_window">
+            <field name="name">Packaging Options</field>
+            <field name="res_model">jabin.packaging</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <!-- Window Action for Excluded Parts -->
+        <record id="action_jabin_excluded_part" model="ir.actions.act_window">
+            <field name="name">Excluded Parts</field>
+            <field name="res_model">jabin.excluded.part</field>
+            <field name="view_mode">tree,form</field>
+        </record>
     </data>
 </odoo>

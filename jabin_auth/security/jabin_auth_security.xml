@@ -1,120 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
+        <!-- ============================================================ -->
+        <!-- Access Rights for JABIN Auth Models                            -->
+        <!-- ============================================================ -->
 
-        <!-- ============================================================== -->
-        <!-- Access rights: jabin.refresh.token                             -->
-        <!-- ============================================================== -->
-
-        <!-- Security admin: full CRUD -->
-        <record id="jabin_refresh_token_access_admin" model="ir.model.access">
-            <field name="name">jabin.refresh.token: admin full access</field>
-            <field name="model_id" ref="model_jabin_refresh_token"/>
-            <field name="group_id" ref="jabin_security.jabin_security_admin_group"/>
-            <field name="perm_read" eval="1"/>
-            <field name="perm_write" eval="1"/>
-            <field name="perm_create" eval="1"/>
-            <field name="perm_unlink" eval="1"/>
-        </record>
-
-        <!-- Authenticated users: read access -->
-        <record id="jabin_refresh_token_access_user_read" model="ir.model.access">
-            <field name="name">jabin.refresh.token: user read</field>
-            <field name="model_id" ref="model_jabin_refresh_token"/>
-            <field name="group_id" ref="base.group_user"/>
-            <field name="perm_read" eval="1"/>
-            <field name="perm_write" eval="0"/>
-            <field name="perm_create" eval="0"/>
-            <field name="perm_unlink" eval="0"/>
-        </record>
-
-        <!-- Public user: create access for anonymous token operations -->
-        <record id="jabin_refresh_token_access_public" model="ir.model.access">
-            <field name="name">jabin.refresh.token: public create</field>
-            <field name="model_id" ref="model_jabin_refresh_token"/>
-            <field name="group_id" ref="base.group_public"/>
-            <field name="perm_read" eval="0"/>
-            <field name="perm_write" eval="0"/>
-            <field name="perm_create" eval="1"/>
-            <field name="perm_unlink" eval="0"/>
-        </record>
-
-        <!-- ============================================================== -->
-        <!-- Access rights: jabin.otp                                        -->
-        <!-- ============================================================== -->
-
-        <!-- Security admin: full CRUD -->
-        <record id="jabin_otp_access_admin" model="ir.model.access">
-            <field name="name">jabin.otp: admin full access</field>
-            <field name="model_id" ref="model_jabin_otp"/>
-            <field name="group_id" ref="jabin_security.jabin_security_admin_group"/>
-            <field name="perm_read" eval="1"/>
-            <field name="perm_write" eval="1"/>
-            <field name="perm_create" eval="1"/>
-            <field name="perm_unlink" eval="1"/>
-        </record>
-
-        <!-- Authenticated users: full access -->
-        <record id="jabin_otp_access_user" model="ir.model.access">
-            <field name="name">jabin.otp: user full access</field>
+        <!-- jabin.otp access - using base.group_user -->
+        <record id="access_jabin_otp_user" model="ir.model.access">
+            <field name="name">jabin.otp user</field>
             <field name="model_id" ref="model_jabin_otp"/>
             <field name="group_id" ref="base.group_user"/>
             <field name="perm_read" eval="1"/>
+            <field name="perm_write" eval="0"/>
+            <field name="perm_create" eval="1"/>
+            <field name="perm_unlink" eval="0"/>
+        </record>
+
+        <!-- jabin.otp manager access -->
+        <record id="access_jabin_otp_manager" model="ir.model.access">
+            <field name="name">jabin.otp manager</field>
+            <field name="model_id" ref="model_jabin_otp"/>
+            <field name="group_id" ref="base.group_system"/>
+            <field name="perm_read" eval="1"/>
             <field name="perm_write" eval="1"/>
             <field name="perm_create" eval="1"/>
             <field name="perm_unlink" eval="1"/>
         </record>
 
-        <!-- Public user: create access for anonymous registration -->
-        <record id="jabin_otp_access_public" model="ir.model.access">
-            <field name="name">jabin.otp: public create</field>
+        <!-- ============================================================ -->
+        <!-- Record Rules for JABIN Auth Models                            -->
+        <!-- ============================================================ -->
+
+        <!-- OTP record rule - users can only see their own OTPs -->
+        <record id="rule_jabin_otp_user" model="ir.rule">
+            <field name="name">jabin.otp: user own records</field>
             <field name="model_id" ref="model_jabin_otp"/>
-            <field name="group_id" ref="base.group_public"/>
-            <field name="perm_read" eval="0"/>
+            <field name="domain_force">[('user_id','=',user.id)]</field>
+            <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+            <field name="perm_read" eval="1"/>
             <field name="perm_write" eval="0"/>
             <field name="perm_create" eval="1"/>
             <field name="perm_unlink" eval="0"/>
         </record>
 
-        <!-- ============================================================== -->
-        <!-- Access rights: Service AbstractModels (no DB table)          -->
-        <!-- ============================================================== -->
-
-
-        <record id="jabin_token_service_access" model="ir.model.access">
-            <field name="name">jabin.token.service: no-table access</field>
-            <field name="model_id" ref="model_jabin_auth_token_service"/>
+        <!-- OTP manager rule - can see all OTPs -->
+        <record id="rule_jabin_otp_manager" model="ir.rule">
+            <field name="name">jabin.otp: manager all records</field>
+            <field name="model_id" ref="model_jabin_otp"/>
+            <field name="domain_force">[(1,'=',1)]</field>
+            <field name="groups" eval="[(4, ref('base.group_system'))]"/>
             <field name="perm_read" eval="1"/>
-            <field name="perm_write" eval="0"/>
-            <field name="perm_create" eval="0"/>
-            <field name="perm_unlink" eval="0"/>
-        </record>
-
-
-        <record id="jabin_otp_service_access" model="ir.model.access">
-            <field name="name">jabin.otp.service: no-table access</field>
-            <field name="model_id" ref="model_jabin_otp_service"/>
-            <field name="perm_read" eval="1"/>
-            <field name="perm_write" eval="0"/>
-            <field name="perm_create" eval="0"/>
-            <field name="perm_unlink" eval="0"/>
-        </record>
-
-        <record id="jabin_email_service_access" model="ir.model.access">
-            <field name="name">jabin.email.service: no-table access</field>
-            <field name="model_id" ref="model_jabin_email_service"/>
-            <field name="perm_read" eval="1"/>
-            <field name="perm_write" eval="0"/>
-            <field name="perm_create" eval="0"/>
-            <field name="perm_unlink" eval="0"/>
-        </record>
-
-
-
-        <!-- User group definition -->
-        <record id="group_jabin_user" model="res.groups">
-            <field name="name">User</field>
-            <field name="category_id" ref="base.module_category_hidden"/>
+            <field name="perm_write" eval="1"/>
+            <field name="perm_create" eval="1"/>
+            <field name="perm_unlink" eval="1"/>
         </record>
 
     </data>

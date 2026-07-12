@@ -1,5 +1,5 @@
 from odoo.addons.jabin_core import EmailValidator
-from odoo import api, models, _,fields
+from odoo import api, models, _, fields
 from odoo.exceptions import ValidationError
 from odoo.addons.jabin_core import JabinLogger
 
@@ -25,7 +25,7 @@ class RegistrationService(models.AbstractModel):
         Raises:
             ValidationError: If email is invalid or user already active
         """
-        User = self.env['jabin.user']
+        User = self.env['res.users']  # Changed from res.users
         OTPService = self.env['jabin.otp.service']
 
         if not email:
@@ -66,7 +66,9 @@ class RegistrationService(models.AbstractModel):
         # Rule: If NOT EXISTS -> Create pending user
         try:
             new_user = User.create({
-                'email': email,
+                'login': email,  # Login is the email
+                'email': email,  # Email field (will be copied to partner)
+                'name': email.split('@')[0],  # Default name from email
                 'status': 'pending',
                 'profile_completed': False,
             })
@@ -102,7 +104,7 @@ class RegistrationService(models.AbstractModel):
         Raises:
             ValidationError: If OTP is invalid or user status is invalid
         """
-        User = self.env['jabin.user']
+        User = self.env['res.users']  # Changed from res.users
         OTPService = self.env['jabin.otp.service']
         TokenService = self.env['jabin.auth.token.service']
 
@@ -150,7 +152,7 @@ class RegistrationService(models.AbstractModel):
             # Add user data to tokens
             tokens['user'] = {
                 'id': user.id,
-                'email': user.email,
+                'email': user.login,  # Use login as email
                 'status': user.status,
                 'profile_completed': user.profile_completed
             }
@@ -176,7 +178,7 @@ class RegistrationService(models.AbstractModel):
         Raises:
             ValidationError: If user not found or already active
         """
-        User = self.env['jabin.user']
+        User = self.env['res.users']  # Changed from res.users
         OTPService = self.env['jabin.otp.service']
 
         if not email:
@@ -235,7 +237,7 @@ class RegistrationService(models.AbstractModel):
         Returns:
             dict: Status information
         """
-        User = self.env['jabin.user']
+        User = self.env['res.users']  # Changed from res.users
 
         if not email:
             raise ValidationError(_("Email is required."))
@@ -254,7 +256,7 @@ class RegistrationService(models.AbstractModel):
         status_info = {
             'exists': True,
             'status': user.status,
-            'email': user.email,
+            'email': user.login,  # Use login as email
             'profile_completed': user.profile_completed
         }
 

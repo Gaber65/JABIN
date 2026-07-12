@@ -56,7 +56,7 @@ class JabinOTP(models.Model):
         help='Email address for which the OTP was generated.'
     )
     user_id = fields.Many2one(
-        comodel_name='jabin.user',
+        comodel_name='res.users',  # Changed from res.users
         string='User',
         index=True,
         ondelete='cascade',
