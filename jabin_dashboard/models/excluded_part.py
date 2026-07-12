@@ -19,6 +19,9 @@ class JabinExcludedPart(models.Model):
         string='Products'
     )
 
+    _sql_constraints = [
+        ('unique_name', 'unique(name)', 'Excluded Part name must be unique!')
+    ]
     @api.constrains('name')
     def _check_unique_name(self):
         for record in self:

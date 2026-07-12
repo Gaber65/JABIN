@@ -1,111 +1,345 @@
-from ..services.category_service import CategoryService
-from odoo.addons.jabin_core import ResponseBuilder
-from odoo import http
-from odoo.http import request
+# category_controller.py
+import base64
 import json
+from typing import Dict, Any, Optional
+
+from odoo import http, _
+from odoo.http import request
+from odoo.exceptions import ValidationError
+
+from odoo.addons.jabin_api.controllers import BaseApiController
+from odoo.addons.jabin_core import ResponseBuilder, JabinLogger
+from odoo.addons.jabin_security.utils.token_auth import require_token
+
+from ..services.category_service import CategoryService
+from ..validators.category_validator import CategoryValidator
+
+_logger = JabinLogger.get("category.controller")
+
+# Allowed image MIME types for upload
+_ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/jpg", "image/png", "image/webp"}
 
 
-class CategoryController(http.Controller):
+def _read_image_upload(file_field_name: str = "image") -> Optional[bytes]:
+    """
+    Read an uploaded image from multipart/form-data.
 
-    @http.route('/api/catalog/category/create', type="http",  auth="public", methods=['POST'])
+    Returns a base64-encoded bytes string suitable for Odoo Binary fields,
+    or None if no file was uploaded.
+    Raises ValueError with a human-readable message on invalid input.
+    """
+    uploaded = request.httprequest.files.get(file_field_name)
+    if not uploaded:
+        return None
+
+    content_type = (uploaded.content_type or "").lower().split(";")[0].strip()
+    if content_type not in _ALLOWED_IMAGE_TYPES:
+        raise ValueError(
+            f"Unsupported image type '{content_type}'. "
+            "Allowed: jpg, jpeg, png, webp."
+        )
+
+    raw = uploaded.read()
+    if not raw:
+        raise ValueError("Uploaded image file is empty.")
+
+    return base64.b64encode(raw)
+
+
+def _parse_request_data() -> Dict[str, Any]:
+    """
+    Parse request data from either multipart/form-data or JSON.
+
+    Returns a dictionary of values ready for service layer consumption.
+    """
+    content_type = request.httprequest.content_type or ""
+    vals = {}
+
+    if "multipart/form-data" in content_type:
+        # Pull scalar fields from form data
+        vals = {
+            k: v
+            for k, v in request.httprequest.form.items()
+            if k not in ["id", "image", "remove_image"]
+        }
+
+        # Handle boolean fields
+        if "active" in vals:
+            vals["active"] = vals["active"].lower() not in ("false", "0", "no")
+
+        # Handle integer fields
+        if "sequence" in vals:
+            try:
+                vals["sequence"] = int(vals["sequence"])
+            except ValueError:
+                raise ValueError("Sequence must be a valid integer.")
+
+        # Handle image upload
+        image_data = _read_image_upload("image")
+        if image_data is not None:
+            vals["image"] = image_data
+
+        # Handle image removal
+        remove_image = request.httprequest.form.get("remove_image")
+        if remove_image and remove_image.lower() not in ("false", "0", "no"):
+            vals["image"] = False
+
+    else:
+        # Parse JSON body
+        raw = request.httprequest.data
+        if raw:
+            try:
+                vals = json.loads(raw)
+            except json.JSONDecodeError:
+                raise ValueError("Invalid JSON payload.")
+
+        # Remove id if present
+        vals.pop("id", None)
+
+        # Handle image removal from JSON
+        if vals.get("remove_image"):
+            vals["image"] = False
+            vals.pop("remove_image", None)
+
+    return vals
+
+
+class CategoryController(BaseApiController):
+    """Category REST API Controller following enterprise standards."""
+
+    @http.route(
+        "/api/v1/catalog/category/create",
+        type="http",
+        auth="public",
+        methods=["POST"],
+        csrf=False,
+    )
     def create_category(self, **kwargs):
-        """Create a new category"""
-        try:
-            vals = json.loads(request.httprequest.data) if request.httprequest.data else kwargs
-            vals.pop('id', None)
+        """Create a new category."""
+        # Require authentication for data modification
+        denied = require_token()
+        if denied:
+            return denied
 
-            category = CategoryService.create_category(request.env, vals)
+        with self.handle() as ctx:
+            # Parse request data
+            vals = _parse_request_data()
 
-            return ResponseBuilder.success(
-                data={
-                    'id': category.id,
-                    'name': category.name,
-                    'sequence': category.sequence,
-                    'active': category.active,
-                    'product_count': category.product_count,
-                },
-                message='Category created successfully'
+            # Create category via service
+            category = CategoryService.create_category(
+                request.env,
+                vals,
             )
-        except Exception as e:
-            # Global Exception Handler will catch this
-            raise
 
-    @http.route('/api/catalog/category/<int:category_id>', type="http",  auth="public", methods=['GET'])
-    def get_category(self, category_id):
-        """Get a single category"""
-        category = CategoryService.get_category(request.env, category_id)
+            # Build success response - use success() NOT http_success()
+            # success() returns a DICTIONARY envelope
+            ctx.set_body(
+                ResponseBuilder.success(
+                    data={
+                        "id": category.id,
+                        "name": category.name,
+                        "sequence": category.sequence,
+                        "active": category.active,
+                        "product_count": category.product_count,
+                    },
+                    message=_("Category created successfully"),
+                    code=201,
+                )
+            )
 
-        return ResponseBuilder.success(
-            data={
-                'id': category.id,
-                'name': category.name,
-                'description': category.description,
-                'image': category.image and category.image.decode('utf-8') if category.image else None,
-                'sequence': category.sequence,
-                'active': category.active,
-                'product_count': category.product_count,
-                'products': [{
-                    'id': p.id,
-                    'name': p.name,
-                    'sku': p.sku,
-                    'selling_price': p.selling_price,
-                    'is_on_offer': p.is_on_offer,
-                } for p in category.product_ids[:10]]
-            }
-        )
+        return ctx.response
 
-    @http.route('/api/catalog/categories', type="http",  auth="public", methods=['GET'])
-    def get_categories(self, limit=100, offset=0, active=None):
-        """Get list of categories"""
-        domain = []
-        if active is not None:
-            domain.append(('active', '=', active == 'true'))
-
-        categories = CategoryService.get_categories(
-            request.env,
-            domain=domain,
-            limit=int(limit),
-            offset=int(offset)
-        )
-
-        return ResponseBuilder.success(
-            data={
-                'categories': [{
-                    'id': c.id,
-                    'name': c.name,
-                    'description': c.description,
-                    'sequence': c.sequence,
-                    'active': c.active,
-                    'product_count': c.product_count,
-                } for c in categories],
-                'total': len(categories),
-                'limit': int(limit),
-                'offset': int(offset)
-            }
-        )
-
-    @http.route('/api/catalog/category/<int:category_id>', type="http",  auth="public", methods=['PUT'])
+    @http.route(
+        "/api/v1/catalog/category/<int:category_id>",
+        type="http",
+        auth="public",
+        methods=["PUT"],
+        csrf=False,
+    )
     def update_category(self, category_id, **kwargs):
-        """Update a category"""
-        vals = json.loads(request.httprequest.data) if request.httprequest.data else kwargs
+        """Update an existing category."""
+        # Require authentication for data modification
+        denied = require_token()
+        if denied:
+            return denied
 
-        category = CategoryService.update_category(request.env, category_id, vals)
+        with self.handle() as ctx:
+            # Parse request data
+            vals = _parse_request_data()
 
-        return ResponseBuilder.success(
-            data={
-                'id': category.id,
-                'name': category.name,
-                'sequence': category.sequence,
-                'active': category.active,
-            },
-            message='Category updated successfully'
-        )
+            # Update category via service
+            category = CategoryService.update_category(
+                request.env,
+                category_id,
+                vals,
+            )
 
-    @http.route('/api/catalog/category/<int:category_id>', type="http",  auth="public", methods=['DELETE'])
-    def delete_category(self, category_id):
-        """Delete a category"""
-        CategoryService.delete_category(request.env, category_id)
+            # Build success response - use success() NOT http_success()
+            ctx.set_body(
+                ResponseBuilder.success(
+                    data={
+                        "id": category.id,
+                        "name": category.name,
+                        "sequence": category.sequence,
+                        "active": category.active,
+                        "product_count": category.product_count,
+                    },
+                    message=_("Category updated successfully"),
+                )
+            )
 
-        return ResponseBuilder.success(
-            message='Category deleted successfully'
-        )
+        return ctx.response
+
+    @http.route(
+        "/api/v1/catalog/category/<int:category_id>",
+        type="http",
+        auth="public",
+        methods=["DELETE"],
+        csrf=False,
+    )
+    def delete_category(self, category_id, **kwargs):
+        """Delete a category."""
+        # Require authentication for data modification
+        denied = require_token()
+        if denied:
+            return denied
+
+        with self.handle() as ctx:
+            # Delete category via service
+            CategoryService.delete_category(
+                request.env,
+                category_id,
+            )
+
+            # Only reachable if deletion succeeded
+            # Build success response - use success() NOT http_success()
+            ctx.set_body(
+                ResponseBuilder.success(
+                    message=_("Category deleted successfully"),
+                )
+            )
+
+        return ctx.response
+
+    @http.route(
+        "/api/v1/catalog/categories",
+        type="http",
+        auth="public",
+        methods=["GET"],
+        csrf=False,
+    )
+    def get_categories(self, **kwargs):
+        """Get paginated list of categories."""
+        # No authentication required for GET
+        with self.handle() as ctx:
+            # Parse parameters
+            try:
+                limit = int(kwargs.get("limit", 100))
+                offset = int(kwargs.get("offset", 0))
+            except ValueError:
+                raise ValueError("Limit and offset must be valid integers.")
+
+            # Validate limit and offset
+            if limit < 1:
+                raise ValueError("Limit must be at least 1.")
+            if offset < 0:
+                raise ValueError("Offset must be at least 0.")
+
+            # Handle language
+            lang = request.httprequest.headers.get("Accept-Language", "en_US")
+            # Map to Odoo language codes
+            lang_map = {
+                "ar": "ar_001",
+                "en": "en_US"
+            }
+            lang = lang_map.get(lang.split('_')[0], "en_US")
+
+            # Get categories via service
+            categories = CategoryService.get_categories(
+                request.env,
+                domain=[],
+                limit=limit,
+                offset=offset,
+                order="sequence, name",
+                lang=lang
+            )
+
+            base_url = request.httprequest.host_url.rstrip('/')
+
+            # Build response data
+            response_data = {
+                "categories": [
+                    {
+                        "id": category.id,
+                        "name": category.name,
+                        "image": f"{base_url}/web/image/jabin.category/{category.id}/image" if category.image else None,
+                        "description": category.description,
+                        "sequence": category.sequence,
+                        "active": category.active,
+                        "product_count": category.product_count,
+                    }
+                    for category in categories
+                ],
+                "total": len(categories),
+                "limit": limit,
+                "offset": offset,
+            }
+
+            # Build success response - use success() NOT http_success()
+            ctx.set_body(
+                ResponseBuilder.success(
+                    data=response_data,
+                    message=_("Categories retrieved successfully"),
+                )
+            )
+
+        return ctx.response
+
+    @http.route(
+        "/api/v1/catalog/category/<int:category_id>",
+        type="http",
+        auth="public",
+        methods=["GET"],
+        csrf=False,
+    )
+    def get_category(self, category_id, **kwargs):
+        """Get a single category by ID."""
+        # No authentication required for GET
+        with self.handle() as ctx:
+            # Handle language
+            lang = request.httprequest.headers.get("Accept-Language", "en_US")
+            lang_map = {
+                "ar": "ar_001",
+                "en": "en_US"
+            }
+            lang = lang_map.get(lang.split('_')[0], "en_US")
+
+            # Get category via service
+            category = CategoryService.get_category(
+                request.env,
+                category_id,
+                lang=lang
+            )
+
+            base_url = request.httprequest.host_url.rstrip('/')
+
+            # Build response data
+            response_data = {
+                "id": category.id,
+                "name": category.name,
+                "image": f"{base_url}/web/image/jabin.category/{category.id}/image" if category.image else None,
+                "description": category.description,
+                "sequence": category.sequence,
+                "active": category.active,
+                "product_count": category.product_count,
+            }
+
+            # Build success response - use success() NOT http_success()
+            ctx.set_body(
+                ResponseBuilder.success(
+                    data=response_data,
+                    message=_("Category retrieved successfully"),
+                )
+            )
+
+        return ctx.response

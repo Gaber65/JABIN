@@ -13,24 +13,26 @@ class JabinProduct(models.Model):
         'jabin.category',
         string='Category',
         required=True,
-        
+
     )
     name = fields.Char(string='Name', required=True, translate=True, )
     description = fields.Text(string='Description', translate=True)
     sku = fields.Char(string='SKU', required=True, )
     barcode = fields.Char(string='Barcode', )
-
+    _sql_constraints = [
+        ('unique_sku', 'unique(sku)', 'SKU must be unique!'),
+    ]
     # Pricing
     purchase_price = fields.Float(
         string='Purchase Price',
         required=True,
-        
+
         digits='Product Price'
     )
     selling_price = fields.Float(
         string='Selling Price',
         required=True,
-        
+
         digits='Product Price'
     )
 
@@ -81,7 +83,7 @@ class JabinProduct(models.Model):
     stock_quantity = fields.Float(
         string='Stock Quantity',
         default=0.0,
-        
+
     )
     minimum_stock = fields.Float(
         string='Minimum Stock',

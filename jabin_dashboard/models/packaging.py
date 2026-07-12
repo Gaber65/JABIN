@@ -18,6 +18,9 @@ class JabinPackaging(models.Model):
         'product_id',
         string='Products'
     )
+    _sql_constraints = [
+        ('unique_name', 'UNIQUE(name)', 'Packaging name must be unique!'),
+    ]
 
     @api.constrains('name')
     def _check_unique_name(self):

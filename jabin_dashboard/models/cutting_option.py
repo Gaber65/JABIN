@@ -19,6 +19,10 @@ class JabinCuttingOption(models.Model):
         string='Products'
     )
 
+    _sql_constraints = [
+        ('name_uniq', 'unique(name)', 'Cutting Option name must be unique!')
+    ]
+
     @api.constrains('name')
     def _check_unique_name(self):
         for record in self:
@@ -27,3 +31,4 @@ class JabinCuttingOption(models.Model):
                 ('id', '!=', record.id)
             ]) > 0:
                 raise ValidationError(_('Cutting Option name must be unique!'))
+
