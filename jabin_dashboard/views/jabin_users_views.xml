@@ -1,0 +1,167 @@
+<odoo>
+    <!-- Tree View -->
+    <record id="view_jabin_users_tree" model="ir.ui.view">
+        <field name="name">jabin.users.tree</field>
+        <field name="model">res.users</field>
+        <field name="arch" type="xml">
+            <tree string="JABIN Users"
+                  decoration-success="status == 'active'"
+                  decoration-warning="status == 'pending'"
+                  decoration-danger="status in ['suspended','inactive']"
+            >
+                <field name="name"/>
+                <field name="login"/>
+                <field name="user_type"/>
+                <field name="status"/>
+                <field name="profile_completed" widget="boolean"/>
+                <field name="balance" sum="Total Balance"/>
+                <field name="last_login"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <!-- Custom Form (Replace Odoo Simple Form) -->
+    <record id="view_jabin_users_form" model="ir.ui.view">
+        <field name="name">jabin.users.form</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_simple_form"/>
+        <field name="priority">9999</field>
+
+        <field name="arch" type="xml">
+
+            <!-- Replace the whole sheet -->
+            <xpath expr="//sheet" position="replace">
+
+                <sheet>
+
+                    <field name="image_1920"
+                           widget="image"
+                           class="oe_avatar"
+                           options="{'preview_image': 'avatar_128'}"/>
+
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <field name="name"/>
+                        </h1>
+                        <label for="login"/>
+                        <h2>
+                            <field name="login"/>
+                        </h2>
+                    </div>
+
+                    <group>
+                        <group>
+                            <field name="user_type"/>
+                            <field name="status"/>
+                            <field name="profile_completed"/>
+                            <field name="verified_at"/>
+                            <field name="last_login"/>
+                        </group>
+
+                        <group>
+                            <field name="balance"
+                                   widget="monetary"
+                                   options="{'currency_field':'currency_id'}"/>
+                            <field name="currency_id"/>
+                            <field name="company_id"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+
+                        <page string="Addresses">
+
+                            <field name="addresses">
+
+                                <tree editable="bottom">
+                                    <field name="title"/>
+                                    <field name="recipient_name"/>
+                                    <field name="recipient_phone"/>
+                                    <field name="street"/>
+                                    <field name="city"/>
+                                    <field name="country_id"/>
+                                    <field name="latitude"/>
+                                    <field name="longitude"/>
+                                    <field name="is_default"/>
+                                </tree>
+
+                            </field>
+
+                        </page>
+
+                    </notebook>
+
+                </sheet>
+
+            </xpath>
+
+            <!-- Replace header -->
+            <xpath expr="//form" position="inside">
+
+                <header>
+
+                    <button
+                            name="update_last_login"
+                            string="Update Last Login"
+                            type="object"
+                            class="btn-primary"
+                            invisible="status != 'active'"/>
+
+                    <field
+                            name="status"
+                            widget="statusbar"
+                            statusbar_visible="pending,active,suspended,inactive"/>
+
+                </header>
+
+            </xpath>
+
+        </field>
+    </record>
+    <!-- Search View -->
+    <record id="view_jabin_users_search" model="ir.ui.view">
+        <field name="name">jabin.users.search</field>
+        <field name="model">res.users</field>
+        <field name="arch" type="xml">
+            <search string="Search Users">
+                <field name="name"/>
+                <field name="login"/>
+                <field name="user_type"/>
+                <field name="status"/>
+                <filter name="active_users" string="Active Users"
+                        domain="[('status','=','active')]"/>
+                <filter name="pending_users" string="Pending Users"
+                        domain="[('status','=','pending')]"/>
+                <filter name="suspended_users" string="Suspended Users"
+                        domain="[('status','=','suspended')]"/>
+                <filter name="inactive_users" string="Inactive Users"
+                        domain="[('status','=','inactive')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_by_status" string="Status"
+                            context="{'group_by':'status'}"/>
+                    <filter name="group_by_type" string="User Type"
+                            context="{'group_by':'user_type'}"/>
+                    <filter name="group_by_company" string="Company"
+                            context="{'group_by':'company_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    <record id="action_jabin_users" model="ir.actions.act_window">
+        <field name="name">Users</field>
+        <field name="res_model">res.users</field>
+        <field name="view_mode">tree,form</field>
+
+        <field name="view_id" ref="view_jabin_users_tree"/>
+
+        <field name="search_view_id" ref="view_jabin_users_search"/>
+        <field name="context">{}</field>
+
+        <field name="views" eval="[
+        (ref('view_jabin_users_tree'), 'tree'),
+        (ref('view_jabin_users_form'), 'form')
+    ]"/>
+    </record>
+</odoo>

@@ -24,6 +24,9 @@ Provides:
     "depends": ["base", "jabin_core"],
     "data": [
         "security/ir.model.access.csv",
+        # "views/users_views.xml",
+        # 'views/jabin_users_actions.xml',  # Add this
+
     ],
     "assets": {},
     "installable": True,

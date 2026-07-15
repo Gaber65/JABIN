@@ -18,6 +18,13 @@ class ResUsers(models.Model):
 
     profile_completed = fields.Boolean(string='Profile Completed', default=False)
 
+
+    addresses = fields.One2many(
+        'res.users.address',
+        'user_id',
+        string='Addresses'
+    )
+
     user_type = fields.Selection([
         ('individual', 'Individual'),
         ('business', 'Business')

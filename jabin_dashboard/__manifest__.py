@@ -15,19 +15,25 @@
         'web',
         'jabin_core',
         'jabin_auth',
+        'jabin_users',
+        'jabin_api'
     ],
     'data': [
         'security/ir.model.access.csv',
         'data/dashboard_data.xml',
-        'views/dashboard_views.xml',  # Load views BEFORE actions
-        'views/actions.xml',
-        'views/menus.xml',
+
+        'views/jabin_users_views.xml',  # Users views and actions FIRST
+
+        'views/dashboard_views.xml',
         'views/category_views.xml',
         'views/product_views.xml',
         'views/cutting_option_views.xml',
         'views/packaging_views.xml',
         'views/excluded_part_views.xml',
+        'views/banner_views.xml',
 
+        'views/actions.xml',  # Load after all views are defined
+        'views/menus.xml',  # Load after all actions are defined
     ],
 
     'assets': {
@@ -38,7 +44,7 @@
         ],
     },
     'demo': [
-        'data/demo_data.xml',  # or put it here if you want it as demo data
+        'data/demo_data.xml',
     ],
     'license': 'LGPL-3',
     'installable': True,

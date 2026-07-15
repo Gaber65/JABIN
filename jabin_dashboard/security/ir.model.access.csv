@@ -7,3 +7,5 @@ access_jabin_product_image_user,jabin.product.image.user,model_jabin_product_ima
 access_jabin_cutting_option_user,jabin.cutting.option.user,model_jabin_cutting_option,base.group_user,1,1,1,1
 access_jabin_packaging_user,jabin.packaging.user,model_jabin_packaging,base.group_user,1,1,1,1
 access_jabin_excluded_part_user,jabin.excluded.part.user,model_jabin_excluded_part,base.group_user,1,1,1,1
+access_banner_user,banner.user,model_banner,base.group_user,1,1,1,1
+
