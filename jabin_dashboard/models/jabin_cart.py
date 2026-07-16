@@ -42,11 +42,7 @@ class JabinCart(models.Model):
         required=True
     )
 
-    # --- Future Ready Fields ---
-    coupon_id = fields.Many2one(
-        'jabin.coupon',
-        string='Coupon'
-    )
+
     delivery_address_id = fields.Many2one(
         'res.users.address',
         string='Delivery Address'
@@ -136,12 +132,191 @@ class JabinCart(models.Model):
         return super().unlink()
 
     # --- Business Methods ---
+    def _check_modifiable(self):
+        self.ensure_one()
+        if self.status != 'active':
+            raise ValidationError(
+                _("Only active carts can be modified.")
+            )
+
+    def add_product(self, product_id, quantity=1.0):
+        """Add a product to the cart or update quantity if it exists."""
+        self.ensure_one()
+        self._check_modifiable()
+        
+        if quantity <= 0:
+            raise ValidationError(_("Quantity must be greater than zero."))
+            
+        product = self.env['jabin.product'].sudo().browse(product_id)
+        if not product.exists():
+            raise ValidationError(_("Product not found."))
+        if not product.active:
+            raise ValidationError(_("Product is inactive."))
+        if not product.is_available:
+            raise ValidationError(_("Product is not available."))
+
+        existing_line = self.line_ids.filtered(lambda l: l.product_id.id == product_id)
+        if existing_line:
+            existing_line.write({'quantity': existing_line.quantity + quantity})
+        else:
+            # Determine discount percent
+            discount = 0.0
+            if product.is_on_offer:
+                if product.discount_type == 'percentage':
+                    discount = product.discount_value
+                elif product.discount_type == 'fixed' and product.selling_price:
+                    discount = (product.discount_value / product.selling_price) * 100.0
+            
+            self.env['jabin.cart.line'].sudo().create({
+                'cart_id': self.id,
+                'product_id': product_id,
+                'quantity': quantity,
+                'price_unit': product.selling_price,
+                'discount_percent': discount,
+                'tax_percent': 0.0
+            })
+            
+        self.write({'updated_date': fields.Datetime.now()})
+        return self
+
+    def remove_product(self, product_id):
+        """Remove a product from the cart."""
+        self.ensure_one()
+        self._check_modifiable()
+        
+        line = self.line_ids.filtered(lambda l: l.product_id.id == product_id)
+        if line:
+            line.unlink()
+            
+        self.write({'updated_date': fields.Datetime.now()})
+        return self
+
+    def update_quantity(self, product_id, quantity):
+        """Update product quantity in the cart."""
+        self.ensure_one()
+        self._check_modifiable()
+        
+        if quantity <= 0:
+            raise ValidationError(_("Quantity must be greater than zero."))
+
+        product = self.env['jabin.product'].sudo().browse(product_id)
+        if not product.exists():
+            raise ValidationError(_("Product not found."))
+            
+        existing_line = self.line_ids.filtered(lambda l: l.product_id.id == product_id)
+        if existing_line:
+            existing_line.write({'quantity': quantity})
+        else:
+            if not product.active:
+                raise ValidationError(_("Product is inactive."))
+            if not product.is_available:
+                raise ValidationError(_("Product is not available."))
+                
+            discount = 0.0
+            if product.is_on_offer:
+                if product.discount_type == 'percentage':
+                    discount = product.discount_value
+                elif product.discount_type == 'fixed' and product.selling_price:
+                    discount = (product.discount_value / product.selling_price) * 100.0
+                    
+            self.env['jabin.cart.line'].sudo().create({
+                'cart_id': self.id,
+                'product_id': product_id,
+                'quantity': quantity,
+                'price_unit': product.selling_price,
+                'discount_percent': discount,
+                'tax_percent': 0.0
+            })
+            
+        self.write({'updated_date': fields.Datetime.now()})
+        return self
+
+    def increase_quantity(self, product_id):
+        """Increase product quantity by 1."""
+        self.ensure_one()
+        self._check_modifiable()
+        
+        existing_line = self.line_ids.filtered(lambda l: l.product_id.id == product_id)
+        if existing_line:
+            existing_line.write({'quantity': existing_line.quantity + 1.0})
+            self.write({'updated_date': fields.Datetime.now()})
+        else:
+            self.add_product(product_id, 1.0)
+        return self
+
+    def decrease_quantity(self, product_id):
+        """Decrease product quantity by 1."""
+        self.ensure_one()
+        self._check_modifiable()
+        
+        existing_line = self.line_ids.filtered(lambda l: l.product_id.id == product_id)
+        if existing_line:
+            if existing_line.quantity > 1.0:
+                existing_line.write({'quantity': existing_line.quantity - 1.0})
+            else:
+                existing_line.unlink()
+            self.write({'updated_date': fields.Datetime.now()})
+        return self
+
     def clear_cart(self):
         """Clear all items from the cart."""
         self.ensure_one()
+        self._check_modifiable()
         self.line_ids.unlink()
         self.write({'updated_date': fields.Datetime.now()})
-        return True
+        return self
+
+    def checkout(self):
+        """Checkout the cart and create an order."""
+        self.ensure_one()
+        self._check_modifiable()
+        
+        if not self.line_ids:
+            raise ValidationError(_("Cannot checkout an empty cart."))
+            
+        if not self.customer_id:
+            raise ValidationError(_("Cart has no customer associated."))
+            
+        if self.customer_id.status not in ('active', 'pending'):
+            raise ValidationError(_("Customer is not active."))
+            
+        for line in self.line_ids:
+            if not line.product_id.active:
+                raise ValidationError(_("Product %s is not active.") % line.product_id.name)
+            if not line.product_id.is_available:
+                raise ValidationError(_("Product %s is not available (out of stock).") % line.product_id.name)
+
+        # Create order
+        order_vals = {
+            'customer_id': self.customer_id.id,
+            'date': fields.Datetime.now(),
+            'state': 'draft',
+            'payment_status': 'pending',
+            'currency_id': self.currency_id.id,
+            'cart_id': self.id,
+        }
+        order = self.env['jabin.order'].sudo().create(order_vals)
+        
+        # Create order lines
+        for line in self.line_ids:
+            self.env['jabin.order.line'].sudo().create({
+                'order_id': order.id,
+                'name': line.product_id.display_name,
+                'price_unit': line.price_unit,
+                'quantity': line.quantity,
+                'discount': line.discount_percent
+            })
+            
+        # Update cart status
+        self.write({
+            'status': 'checked_out',
+            'checked_out_order_id': order.id
+        })
+        
+        # Log customer activity
+        self.customer_id.log_activity('checked_out', related_record=f'jabin.order,{order.id}')
+        
+        return order
 
     def get_summary(self):
         """Get cart summary as a dictionary."""

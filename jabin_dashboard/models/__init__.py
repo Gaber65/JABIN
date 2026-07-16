@@ -7,3 +7,6 @@ from . import packaging
 from . import excluded_part
 from . import banner_model
 from . import jabin_order_line_ext
+from . import jabin_cart
+from . import res_users_ext
+from . import jabin_order_ext

@@ -326,7 +326,7 @@
             <field name="is_featured">True</field>
             <field name="is_best_seller">False</field>
             <field name="cutting_option_ids" eval="[(4, ref('cutting_straight'))]"/>
-            <field name="packaging_ids" eval="[(4, ref('packaging_box')), (4, ref('packaging_foam'))]"/>
+            <field name="packaging_ids" eval="[(4, ref('packaging_box'))]"/>
             <field name="excluded_part_ids" eval="[(4, ref('excluded_electronic'))]"/>
         </record>
 
@@ -509,7 +509,7 @@
             <field name="active">True</field>
             <field name="is_featured">False</field>
             <field name="is_best_seller">True</field>
-            <field name="packaging_ids" eval="[(4, ref('packaging_box')), (4, ref('packaging_foam'))]"/>
+            <field name="packaging_ids" eval="[(4, ref('packaging_box'))]"/>
             <field name="excluded_part_ids" eval="[(4, ref('excluded_metal')), (4, ref('excluded_plastic'))]"/>
         </record>
 

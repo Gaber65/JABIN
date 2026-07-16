@@ -5,14 +5,12 @@ from typing import Dict, Any, Optional
 
 from odoo import http, _
 from odoo.http import request
-from odoo.exceptions import ValidationError
 
 from odoo.addons.jabin_api.controllers import BaseApiController
 from odoo.addons.jabin_core import ResponseBuilder, JabinLogger
 from odoo.addons.jabin_security.utils.token_auth import require_token
 
 from ..services.category_service import CategoryService
-from ..validators.category_validator import CategoryValidator
 
 _logger = JabinLogger.get("category.controller")
 
