@@ -48,84 +48,124 @@ class JabinDashboard(models.Model):
 
     def _get_kpi_data(self) -> Dict[str, Any]:
         """
-        Get placeholder KPI data
-        Returns dummy data structure
+        Get actual database KPI data
         """
+        total_customers = self.env['res.users'].search_count([
+            ('user_type', 'in', ('individual', 'business')),
+            ('active', '=', True)
+        ])
+        total_orders = self.env['jabin.order'].search_count([])
+        total_products = self.env['jabin.product'].search_count([('active', '=', True)])
+        
+        paid_orders = self.env['jabin.order'].search([('payment_status', '=', 'paid')])
+        total_revenue = sum(paid_orders.mapped('total'))
+        
+        pending_orders = self.env['jabin.order'].search_count([
+            ('state', 'in', ('draft', 'pending_payment', 'confirmed', 'preparing', 'ready_pickup', 'out_delivery'))
+        ])
+        low_stock = self.env['jabin.product'].search_count([
+            ('stock_quantity', '<=', 5.0)
+        ])
+        
         return {
-            'total_orders': 1234,
-            'total_customers': 567,
-            'total_products': 89,
-            'total_revenue': 123456.78,
-            'pending_orders': 45,
-            'low_stock': 12,
+            'total_orders': total_orders,
+            'total_customers': total_customers,
+            'total_products': total_products,
+            'total_revenue': total_revenue,
+            'pending_orders': pending_orders,
+            'low_stock': low_stock,
         }
 
     def _get_recent_orders(self) -> list:
         """
-        Get placeholder recent orders data
-        Returns dummy order data
+        Get actual recent orders data
         """
-        return [
-            {
-                'order_number': 'JAB-001',
-                'customer': 'Acme Corp',
-                'date': '2024-01-15',
-                'status': 'Completed',
-                'total': 1499.99,
-            },
-            {
-                'order_number': 'JAB-002',
-                'customer': 'TechWorld Inc',
-                'date': '2024-01-15',
-                'status': 'Processing',
-                'total': 2499.50,
-            },
-            {
-                'order_number': 'JAB-003',
-                'customer': 'Global Solutions',
-                'date': '2024-01-14',
-                'status': 'Pending',
-                'total': 899.00,
-            },
-        ]
+        orders = self.env['jabin.order'].search([], limit=5, order='date desc')
+        res = []
+        for order in orders:
+            res.append({
+                'order_number': order.name,
+                'customer': order.customer_id.name,
+                'date': fields.Datetime.to_string(order.date)[:10] if order.date else '',
+                'status': dict(order._fields['state'].selection).get(order.state, order.state),
+                'total': order.total,
+            })
+        return res
 
     def _get_top_products(self) -> list:
         """
-        Get placeholder top products data
-        Returns dummy product data
+        Get actual top products data based on order lines
         """
-        return [
-            {
-                'name': 'Enterprise License',
-                'category': 'Software',
-                'sales': 24500.00,
-                'units': 12,
-            },
-            {
-                'name': 'Premium Support',
-                'category': 'Services',
-                'sales': 18500.00,
-                'units': 24,
-            },
-            {
-                'name': 'Development Kit',
-                'category': 'Hardware',
-                'sales': 12500.00,
-                'units': 18,
-            },
-        ]
+        lines = self.env['jabin.order.line'].search([
+            ('order_id.state', 'not in', ('draft', 'cancelled'))
+        ])
+        prod_counts = {}
+        for line in lines:
+            # Check product_id (extended field in jabin_dashboard)
+            prod = getattr(line, 'product_id', None)
+            if prod:
+                prod_counts[prod] = prod_counts.get(prod, 0.0) + line.quantity
+        
+        sorted_prods = sorted(prod_counts.items(), key=lambda x: x[1], reverse=True)[:5]
+        res = []
+        for prod, qty in sorted_prods:
+            res.append({
+                'name': prod.name,
+                'category': prod.category_id.name or 'Uncategorized',
+                'sales': sum(lines.filtered(lambda l: getattr(l, 'product_id', None) == prod).mapped('price_subtotal')),
+                'units': int(qty),
+            })
+        
+        if not res:
+            products = self.env['jabin.product'].search([], limit=3)
+            for prod in products:
+                res.append({
+                    'name': prod.name,
+                    'category': prod.category_id.name or 'Uncategorized',
+                    'sales': 0.0,
+                    'units': 0,
+                })
+        return res
 
     def _get_chart_data(self) -> Dict[str, Any]:
         """
-        Get placeholder chart data
-        Returns dummy sales chart data
+        Get actual chart data
         """
+        orders = self.env['jabin.order'].search([
+            ('state', 'not in', ('draft', 'cancelled'))
+        ], order='date asc')
+        
+        months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        sales_by_month = [0.0] * 12
+        orders_by_month = [0] * 12
+        customers_by_month = [0] * 12
+        
+        import datetime
+        for order in orders:
+            dt = order.date
+            if dt:
+                m = dt.month - 1
+                sales_by_month[m] += order.total
+                orders_by_month[m] += 1
+        
+        customers = self.env['res.users'].search([
+            ('user_type', 'in', ('individual', 'business'))
+        ])
+        for cust in customers:
+            dt = cust.create_date
+            if dt:
+                m = dt.month - 1
+                customers_by_month[m] += 1
+
+        now = datetime.datetime.now()
+        cur_month = max(1, now.month)
+        
         return {
-            'labels': ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            'labels': months[:cur_month],
             'datasets': {
-                'sales': [12000, 19000, 15000, 22000, 18000, 25000],
-                'orders': [45, 60, 55, 70, 65, 80],
-                'customers': [30, 35, 40, 45, 50, 55],
+                'sales': sales_by_month[:cur_month],
+                'orders': orders_by_month[:cur_month],
+                'customers': customers_by_month[:cur_month],
             }
         }
 

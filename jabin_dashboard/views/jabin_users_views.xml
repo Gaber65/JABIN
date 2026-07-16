@@ -51,25 +51,42 @@
                         </h2>
                     </div>
 
-                    <group>
-                        <group>
-                            <field name="user_type"/>
-                            <field name="status"/>
-                            <field name="profile_completed"/>
-                            <field name="verified_at"/>
-                            <field name="last_login"/>
-                        </group>
-
-                        <group>
-                            <field name="balance"
-                                   widget="monetary"
-                                   options="{'currency_field':'currency_id'}"/>
-                            <field name="currency_id"/>
-                            <field name="company_id"/>
-                        </group>
-                    </group>
-
                     <notebook>
+
+                        <page string="Overview">
+                            <group>
+                                <group string="Financial Information">
+                                    <field name="total_orders_count"/>
+                                    <field name="total_spending" widget="monetary" options="{'currency_field':'currency_id'}"/>
+                                    <field name="average_order_value" widget="monetary" options="{'currency_field':'currency_id'}"/>
+                                    <field name="total_refunds" widget="monetary" options="{'currency_field':'currency_id'}"/>
+                                    <field name="preferred_payment_method_id"/>
+                                </group>
+                                <group string="Activity Metrics">
+                                    <field name="pending_payments_count"/>
+                                    <field name="completed_payments_count"/>
+                                    <field name="create_date" string="Registration Date" readonly="1"/>
+                                    <field name="last_login" readonly="1"/>
+                                    <field name="last_activity_date" readonly="1"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="Personal Information">
+                            <group>
+                                <group>
+                                    <field name="user_type"/>
+                                    <field name="status"/>
+                                    <field name="profile_completed"/>
+                                    <field name="verified_at"/>
+                                </group>
+                                <group>
+                                    <field name="balance" widget="monetary" options="{'currency_field':'currency_id'}"/>
+                                    <field name="currency_id"/>
+                                    <field name="company_id"/>
+                                </group>
+                            </group>
+                        </page>
 
                         <page string="Addresses">
 
@@ -89,6 +106,93 @@
 
                             </field>
 
+                        </page>
+
+                        <page string="Orders">
+                            <notebook>
+                                <page string="All Orders">
+                                    <field name="order_ids" readonly="1">
+                                        <tree string="All Orders">
+                                            <field name="name"/>
+                                            <field name="date"/>
+                                            <field name="state"/>
+                                            <field name="payment_status"/>
+                                            <field name="total" sum="Total Purchases"/>
+                                        </tree>
+                                    </field>
+                                </page>
+                                <page string="Active Orders">
+                                    <field name="active_order_ids" readonly="1">
+                                        <tree string="Active Orders">
+                                            <field name="name"/>
+                                            <field name="date"/>
+                                            <field name="state"/>
+                                            <field name="payment_status"/>
+                                            <field name="total" sum="Total Active Purchases"/>
+                                        </tree>
+                                    </field>
+                                </page>
+                                <page string="Previous Orders">
+                                    <field name="previous_order_ids" readonly="1">
+                                        <tree string="Previous Orders">
+                                            <field name="name"/>
+                                            <field name="date"/>
+                                            <field name="state"/>
+                                            <field name="payment_status"/>
+                                            <field name="total" sum="Total Completed Purchases"/>
+                                        </tree>
+                                    </field>
+                                </page>
+                                <page string="Cancelled Orders">
+                                    <field name="cancelled_order_ids" readonly="1">
+                                        <tree string="Cancelled Orders">
+                                            <field name="name"/>
+                                            <field name="date"/>
+                                            <field name="state"/>
+                                            <field name="payment_status"/>
+                                            <field name="total"/>
+                                        </tree>
+                                    </field>
+                                </page>
+                                <page string="Refunded Orders">
+                                    <field name="refunded_order_ids" readonly="1">
+                                        <tree string="Refunded Orders">
+                                            <field name="name"/>
+                                            <field name="date"/>
+                                            <field name="state"/>
+                                            <field name="payment_status"/>
+                                            <field name="total" sum="Total Refunded Amount"/>
+                                        </tree>
+                                    </field>
+                                </page>
+                            </notebook>
+                        </page>
+
+                        <page string="Payment Management">
+                            <field name="payment_transaction_ids" readonly="1">
+                                <tree string="Payment Transactions">
+                                    <field name="order_id"/>
+                                    <field name="payment_method_id"/>
+                                    <field name="amount"/>
+                                    <field name="status"/>
+                                    <field name="transaction_ref"/>
+                                    <field name="paid_date"/>
+                                    <field name="is_installment" widget="boolean"/>
+                                    <field name="installment_status" optional="hide"/>
+                                    <field name="installment_provider" optional="hide"/>
+                                </tree>
+                            </field>
+                        </page>
+
+                        <page string="Activity History">
+                            <field name="activity_ids" readonly="1">
+                                <tree string="Customer Activities">
+                                    <field name="timestamp"/>
+                                    <field name="action"/>
+                                    <field name="related_record"/>
+                                    <field name="triggered_by_id"/>
+                                </tree>
+                            </field>
                         </page>
 
                     </notebook>

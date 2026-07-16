@@ -1,5 +1,4 @@
-from odoo import fields, models
-
+from odoo import api, fields, models
 
 class JabinUserAddress(models.Model):
     _name = "res.users.address"
@@ -27,3 +26,16 @@ class JabinUserAddress(models.Model):
     longitude = fields.Float()
 
     is_default = fields.Boolean(default=False)
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        addresses = super().create(vals_list)
+        for addr in addresses:
+            addr.user_id.log_activity("changed_address", related_record=f"res.users.address,{addr.id}")
+        return addresses
+
+    def write(self, vals):
+        res = super().write(vals)
+        for addr in self:
+            addr.user_id.log_activity("changed_address", related_record=f"res.users.address,{addr.id}")
+        return res

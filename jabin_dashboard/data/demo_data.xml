@@ -2,7 +2,70 @@
 <odoo>
     <data noupdate="1">
 
-        <!-- Categories -->
+        <!-- ==================== BANNERS ==================== -->
+        <record id="banner_home" model="banner">
+            <field name="name">Homepage Banner</field>
+            <field name="active">True</field>
+        </record>
+
+        <record id="banner_sale" model="banner">
+            <field name="name">Summer Sale 2026</field>
+            <field name="active">True</field>
+        </record>
+
+        <record id="banner_winter" model="banner">
+            <field name="name">Winter Collection</field>
+            <field name="active">True</field>
+        </record>
+
+        <record id="banner_eid" model="banner">
+            <field name="name">Eid Special Offers</field>
+            <field name="active">True</field>
+        </record>
+
+        <record id="banner_summer" model="banner">
+            <field name="name">Summer Collection</field>
+            <field name="active">False</field>
+        </record>
+
+        <!-- ==================== DASHBOARD SECTIONS ==================== -->
+        <record id="dashboard_overview" model="jabin.dashboard">
+            <field name="name">Overview</field>
+            <field name="sequence">10</field>
+            <field name="description">Main dashboard overview with key metrics</field>
+            <field name="active">True</field>
+            <field name="color">1</field>
+            <field name="icon">fa-dashboard</field>
+        </record>
+
+        <record id="dashboard_sales" model="jabin.dashboard">
+            <field name="name">Sales Analytics</field>
+            <field name="sequence">20</field>
+            <field name="description">Sales performance and analytics</field>
+            <field name="active">True</field>
+            <field name="color">2</field>
+            <field name="icon">fa-line-chart</field>
+        </record>
+
+        <record id="dashboard_inventory" model="jabin.dashboard">
+            <field name="name">Inventory Management</field>
+            <field name="sequence">30</field>
+            <field name="description">Stock and inventory overview</field>
+            <field name="active">True</field>
+            <field name="color">3</field>
+            <field name="icon">fa-warehouse</field>
+        </record>
+
+        <record id="dashboard_customers" model="jabin.dashboard">
+            <field name="name">Customer Insights</field>
+            <field name="sequence">40</field>
+            <field name="description">Customer analytics and insights</field>
+            <field name="active">True</field>
+            <field name="color">4</field>
+            <field name="icon">fa-users</field>
+        </record>
+
+        <!-- ==================== CATEGORIES ==================== -->
         <record id="category_electronics" model="jabin.category">
             <field name="name">Electronics</field>
             <field name="description">Electronic devices and accessories</field>
@@ -38,7 +101,14 @@
             <field name="active">True</field>
         </record>
 
-        <!-- Cutting Options -->
+        <record id="category_toys" model="jabin.category">
+            <field name="name">Toys &amp; Games</field>
+            <field name="description">Children's toys and games</field>
+            <field name="sequence">60</field>
+            <field name="active">True</field>
+        </record>
+
+        <!-- ==================== CUTTING OPTIONS ==================== -->
         <record id="cutting_diagonal" model="jabin.cutting.option">
             <field name="name">Diagonal Cut</field>
             <field name="description">Cut diagonally for better presentation</field>
@@ -63,7 +133,19 @@
             <field name="active">True</field>
         </record>
 
-        <!-- Packaging Options -->
+        <record id="cutting_round" model="jabin.cutting.option">
+            <field name="name">Round Cut</field>
+            <field name="description">Round edge cutting for smooth finish</field>
+            <field name="active">True</field>
+        </record>
+
+        <record id="cutting_angled" model="jabin.cutting.option">
+            <field name="name">Angled Cut</field>
+            <field name="description">45-degree angled cut</field>
+            <field name="active">True</field>
+        </record>
+
+        <!-- ==================== PACKAGING OPTIONS ==================== -->
         <record id="packaging_box" model="jabin.packaging">
             <field name="name">Cardboard Box</field>
             <field name="description">Standard cardboard packaging box</field>
@@ -88,7 +170,19 @@
             <field name="active">True</field>
         </record>
 
-        <!-- Excluded Parts -->
+        <record id="packaging_eco" model="jabin.packaging">
+            <field name="name">Eco-Friendly Package</field>
+            <field name="description">Biodegradable and recyclable packaging</field>
+            <field name="active">True</field>
+        </record>
+
+        <record id="packaging_wooden" model="jabin.packaging">
+            <field name="name">Wooden Crate</field>
+            <field name="description">Premium wooden crate for fragile items</field>
+            <field name="active">True</field>
+        </record>
+
+        <!-- ==================== EXCLUDED PARTS ==================== -->
         <record id="excluded_metal" model="jabin.excluded.part">
             <field name="name">Metal Components</field>
             <field name="description">Metal parts to be excluded</field>
@@ -113,7 +207,14 @@
             <field name="active">True</field>
         </record>
 
-        <!-- Products -->
+        <record id="excluded_wood" model="jabin.excluded.part">
+            <field name="name">Wood Components</field>
+            <field name="description">Wood parts to be excluded from processing</field>
+            <field name="active">True</field>
+        </record>
+
+        <!-- ==================== PRODUCTS ==================== -->
+        <!-- Electronics -->
         <record id="product_laptop" model="jabin.product">
             <field name="category_id" ref="category_electronics"/>
             <field name="name">Premium Laptop</field>
@@ -160,6 +261,76 @@
             <field name="excluded_part_ids" eval="[(4, ref('excluded_electronic'))]"/>
         </record>
 
+        <record id="product_headphones" model="jabin.product">
+            <field name="category_id" ref="category_electronics"/>
+            <field name="name">Wireless Headphones</field>
+            <field name="description">Noise-cancelling wireless headphones with long battery life</field>
+            <field name="sku">HPH-007</field>
+            <field name="barcode">1234567890129</field>
+            <field name="purchase_price">100.00</field>
+            <field name="selling_price">199.99</field>
+            <field name="discount_type">percentage</field>
+            <field name="discount_value">30.0</field>
+            <field name="offer_start_date">2026-07-20</field>
+            <field name="offer_end_date">2026-08-20</field>
+            <field name="stock_quantity">75</field>
+            <field name="minimum_stock">15</field>
+            <field name="weight">0.8</field>
+            <field name="preparation_time">4</field>
+            <field name="active">True</field>
+            <field name="is_featured">True</field>
+            <field name="is_best_seller">False</field>
+            <field name="packaging_ids" eval="[(4, ref('packaging_box'))]"/>
+        </record>
+
+        <record id="product_mouse" model="jabin.product">
+            <field name="category_id" ref="category_electronics"/>
+            <field name="name">Gaming Mouse Pro</field>
+            <field name="description">High-precision gaming mouse with RGB lighting</field>
+            <field name="sku">MOU-010</field>
+            <field name="barcode">1234567890132</field>
+            <field name="purchase_price">30.00</field>
+            <field name="selling_price">69.99</field>
+            <field name="discount_type">percentage</field>
+            <field name="discount_value">15.0</field>
+            <field name="offer_start_date">2026-08-01</field>
+            <field name="offer_end_date">2026-08-31</field>
+            <field name="stock_quantity">120</field>
+            <field name="minimum_stock">20</field>
+            <field name="weight">0.15</field>
+            <field name="preparation_time">2</field>
+            <field name="active">True</field>
+            <field name="is_featured">False</field>
+            <field name="is_best_seller">False</field>
+            <field name="cutting_option_ids" eval="[(4, ref('cutting_straight'))]"/>
+            <field name="packaging_ids" eval="[(4, ref('packaging_box')), (4, ref('packaging_plastic'))]"/>
+        </record>
+
+        <record id="product_watch" model="jabin.product">
+            <field name="category_id" ref="category_electronics"/>
+            <field name="name">Smart Watch Pro</field>
+            <field name="description">Advanced smart watch with health tracking</field>
+            <field name="sku">WAT-015</field>
+            <field name="barcode">1234567890137</field>
+            <field name="purchase_price">180.00</field>
+            <field name="selling_price">349.99</field>
+            <field name="discount_type">percentage</field>
+            <field name="discount_value">20.0</field>
+            <field name="offer_start_date">2026-07-25</field>
+            <field name="offer_end_date">2026-08-25</field>
+            <field name="stock_quantity">45</field>
+            <field name="minimum_stock">8</field>
+            <field name="weight">0.3</field>
+            <field name="preparation_time">3</field>
+            <field name="active">True</field>
+            <field name="is_featured">True</field>
+            <field name="is_best_seller">False</field>
+            <field name="cutting_option_ids" eval="[(4, ref('cutting_straight'))]"/>
+            <field name="packaging_ids" eval="[(4, ref('packaging_box')), (4, ref('packaging_foam'))]"/>
+            <field name="excluded_part_ids" eval="[(4, ref('excluded_electronic'))]"/>
+        </record>
+
+        <!-- Clothing -->
         <record id="product_shirt" model="jabin.product">
             <field name="category_id" ref="category_clothing"/>
             <field name="name">Premium Cotton Shirt</field>
@@ -182,6 +353,29 @@
             <field name="packaging_ids" eval="[(4, ref('packaging_bag')), (4, ref('packaging_gift'))]"/>
         </record>
 
+        <record id="product_dress" model="jabin.product">
+            <field name="category_id" ref="category_clothing"/>
+            <field name="name">Elegant Evening Dress</field>
+            <field name="description">Stunning evening dress with floral pattern</field>
+            <field name="sku">DRS-011</field>
+            <field name="barcode">1234567890133</field>
+            <field name="purchase_price">25.00</field>
+            <field name="selling_price">89.99</field>
+            <field name="discount_type">fixed</field>
+            <field name="discount_value">10.00</field>
+            <field name="offer_start_date">2026-07-20</field>
+            <field name="offer_end_date">2026-08-20</field>
+            <field name="stock_quantity">60</field>
+            <field name="minimum_stock">10</field>
+            <field name="weight">0.4</field>
+            <field name="preparation_time">3</field>
+            <field name="active">True</field>
+            <field name="is_featured">True</field>
+            <field name="is_best_seller">False</field>
+            <field name="packaging_ids" eval="[(4, ref('packaging_gift'))]"/>
+        </record>
+
+        <!-- Food -->
         <record id="product_pizza" model="jabin.product">
             <field name="category_id" ref="category_food"/>
             <field name="name">Gourmet Pizza</field>
@@ -206,72 +400,6 @@
             <field name="excluded_part_ids" eval="[(4, ref('excluded_plastic'))]"/>
         </record>
 
-        <record id="product_table" model="jabin.product">
-            <field name="category_id" ref="category_furniture"/>
-            <field name="name">Modern Dining Table</field>
-            <field name="description">Elegant wooden dining table for 6 people</field>
-            <field name="sku">TBL-005</field>
-            <field name="barcode">1234567890127</field>
-            <field name="purchase_price">250.00</field>
-            <field name="selling_price">499.99</field>
-            <field name="discount_type">fixed</field>
-            <field name="discount_value">25.00</field>
-            <field name="offer_start_date">2026-08-01</field>
-            <field name="offer_end_date">2026-09-01</field>
-            <field name="stock_quantity">30</field>
-            <field name="minimum_stock">5</field>
-            <field name="weight">45.0</field>
-            <field name="preparation_time">30</field>
-            <field name="active">True</field>
-            <field name="is_featured">False</field>
-            <field name="is_best_seller">False</field>
-            <field name="packaging_ids" eval="[(4, ref('packaging_box'))]"/>
-        </record>
-
-        <record id="product_notebook" model="jabin.product">
-            <field name="category_id" ref="category_books"/>
-            <field name="name">Premium Notebook</field>
-            <field name="description">Leather-bound notebook with premium paper</field>
-            <field name="sku">NBK-006</field>
-            <field name="barcode">1234567890128</field>
-            <field name="purchase_price">5.00</field>
-            <field name="selling_price">14.99</field>
-            <field name="discount_type">percentage</field>
-            <field name="discount_value">5.0</field>
-            <field name="offer_start_date">2026-07-15</field>
-            <field name="offer_end_date">2026-08-15</field>
-            <field name="stock_quantity">500</field>
-            <field name="minimum_stock">100</field>
-            <field name="weight">0.3</field>
-            <field name="preparation_time">1</field>
-            <field name="active">True</field>
-            <field name="is_featured">False</field>
-            <field name="is_best_seller">False</field>
-            <field name="packaging_ids" eval="[(4, ref('packaging_plastic'))]"/>
-        </record>
-
-        <record id="product_headphones" model="jabin.product">
-            <field name="category_id" ref="category_electronics"/>
-            <field name="name">Wireless Headphones</field>
-            <field name="description">Noise-cancelling wireless headphones with long battery life</field>
-            <field name="sku">HPH-007</field>
-            <field name="barcode">1234567890129</field>
-            <field name="purchase_price">100.00</field>
-            <field name="selling_price">199.99</field>
-            <field name="discount_type">percentage</field>
-            <field name="discount_value">30.0</field>
-            <field name="offer_start_date">2026-07-20</field>
-            <field name="offer_end_date">2026-08-20</field>
-            <field name="stock_quantity">75</field>
-            <field name="minimum_stock">15</field>
-            <field name="weight">0.8</field>
-            <field name="preparation_time">4</field>
-            <field name="active">True</field>
-            <field name="is_featured">True</field>
-            <field name="is_best_seller">False</field>
-            <field name="packaging_ids" eval="[(4, ref('packaging_box'))]"/>
-        </record>
-
         <record id="product_coffee" model="jabin.product">
             <field name="category_id" ref="category_food"/>
             <field name="name">Specialty Coffee</field>
@@ -292,6 +420,51 @@
             <field name="is_featured">False</field>
             <field name="is_best_seller">True</field>
             <field name="packaging_ids" eval="[(4, ref('packaging_bag'))]"/>
+        </record>
+
+        <record id="product_greentea" model="jabin.product">
+            <field name="category_id" ref="category_food"/>
+            <field name="name">Premium Green Tea</field>
+            <field name="description">Organic Japanese green tea leaves</field>
+            <field name="sku">TEA-012</field>
+            <field name="barcode">1234567890134</field>
+            <field name="purchase_price">6.00</field>
+            <field name="selling_price">15.99</field>
+            <field name="discount_type">percentage</field>
+            <field name="discount_value">0.0</field>
+            <field name="offer_start_date">2026-08-10</field>
+            <field name="offer_end_date">2026-09-10</field>
+            <field name="stock_quantity">250</field>
+            <field name="minimum_stock">40</field>
+            <field name="weight">0.2</field>
+            <field name="preparation_time">3</field>
+            <field name="active">True</field>
+            <field name="is_featured">False</field>
+            <field name="is_best_seller">False</field>
+            <field name="packaging_ids" eval="[(4, ref('packaging_bag'))]"/>
+        </record>
+
+        <!-- Furniture -->
+        <record id="product_table" model="jabin.product">
+            <field name="category_id" ref="category_furniture"/>
+            <field name="name">Modern Dining Table</field>
+            <field name="description">Elegant wooden dining table for 6 people</field>
+            <field name="sku">TBL-005</field>
+            <field name="barcode">1234567890127</field>
+            <field name="purchase_price">250.00</field>
+            <field name="selling_price">499.99</field>
+            <field name="discount_type">fixed</field>
+            <field name="discount_value">25.00</field>
+            <field name="offer_start_date">2026-08-01</field>
+            <field name="offer_end_date">2026-09-01</field>
+            <field name="stock_quantity">30</field>
+            <field name="minimum_stock">5</field>
+            <field name="weight">45.0</field>
+            <field name="preparation_time">30</field>
+            <field name="active">True</field>
+            <field name="is_featured">False</field>
+            <field name="is_best_seller">False</field>
+            <field name="packaging_ids" eval="[(4, ref('packaging_box'))]"/>
         </record>
 
         <record id="product_sofa" model="jabin.product">
@@ -317,7 +490,165 @@
             <field name="excluded_part_ids" eval="[(4, ref('excluded_metal')), (4, ref('excluded_plastic'))]"/>
         </record>
 
-        <!-- Dashboard Settings -->
+        <record id="product_chair" model="jabin.product">
+            <field name="category_id" ref="category_furniture"/>
+            <field name="name">Ergonomic Office Chair</field>
+            <field name="description">Premium ergonomic chair with lumbar support</field>
+            <field name="sku">CHA-013</field>
+            <field name="barcode">1234567890135</field>
+            <field name="purchase_price">150.00</field>
+            <field name="selling_price">299.99</field>
+            <field name="discount_type">percentage</field>
+            <field name="discount_value">10.0</field>
+            <field name="offer_start_date">2026-07-15</field>
+            <field name="offer_end_date">2026-08-15</field>
+            <field name="stock_quantity">25</field>
+            <field name="minimum_stock">5</field>
+            <field name="weight">18.0</field>
+            <field name="preparation_time">20</field>
+            <field name="active">True</field>
+            <field name="is_featured">False</field>
+            <field name="is_best_seller">True</field>
+            <field name="packaging_ids" eval="[(4, ref('packaging_box')), (4, ref('packaging_foam'))]"/>
+            <field name="excluded_part_ids" eval="[(4, ref('excluded_metal')), (4, ref('excluded_plastic'))]"/>
+        </record>
+
+        <!-- Books -->
+        <record id="product_notebook" model="jabin.product">
+            <field name="category_id" ref="category_books"/>
+            <field name="name">Premium Notebook</field>
+            <field name="description">Leather-bound notebook with premium paper</field>
+            <field name="sku">NBK-006</field>
+            <field name="barcode">1234567890128</field>
+            <field name="purchase_price">5.00</field>
+            <field name="selling_price">14.99</field>
+            <field name="discount_type">percentage</field>
+            <field name="discount_value">5.0</field>
+            <field name="offer_start_date">2026-07-15</field>
+            <field name="offer_end_date">2026-08-15</field>
+            <field name="stock_quantity">500</field>
+            <field name="minimum_stock">100</field>
+            <field name="weight">0.3</field>
+            <field name="preparation_time">1</field>
+            <field name="active">True</field>
+            <field name="is_featured">False</field>
+            <field name="is_best_seller">False</field>
+            <field name="packaging_ids" eval="[(4, ref('packaging_plastic'))]"/>
+        </record>
+
+        <record id="product_book" model="jabin.product">
+            <field name="category_id" ref="category_books"/>
+            <field name="name">Mystery Novel - The Hidden Truth</field>
+            <field name="description">Best-selling mystery novel by acclaimed author</field>
+            <field name="sku">BOK-014</field>
+            <field name="barcode">1234567890136</field>
+            <field name="purchase_price">8.00</field>
+            <field name="selling_price">19.99</field>
+            <field name="discount_type">fixed</field>
+            <field name="discount_value">2.00</field>
+            <field name="offer_start_date">2026-08-01</field>
+            <field name="offer_end_date">2026-08-31</field>
+            <field name="stock_quantity">200</field>
+            <field name="minimum_stock">30</field>
+            <field name="weight">0.4</field>
+            <field name="preparation_time">1</field>
+            <field name="active">True</field>
+            <field name="is_featured">False</field>
+            <field name="is_best_seller">True</field>
+            <field name="packaging_ids" eval="[(4, ref('packaging_plastic'))]"/>
+        </record>
+
+        <!-- Toys -->
+        <record id="product_puzzle" model="jabin.product">
+            <field name="category_id" ref="category_toys"/>
+            <field name="name">Wooden Puzzle Game</field>
+            <field name="description">Educational wooden puzzle for children</field>
+            <field name="sku">PUZ-016</field>
+            <field name="barcode">1234567890138</field>
+            <field name="purchase_price">4.00</field>
+            <field name="selling_price">12.99</field>
+            <field name="discount_type">percentage</field>
+            <field name="discount_value">5.0</field>
+            <field name="offer_start_date">2026-08-01</field>
+            <field name="offer_end_date">2026-08-31</field>
+            <field name="stock_quantity">80</field>
+            <field name="minimum_stock">15</field>
+            <field name="weight">0.6</field>
+            <field name="preparation_time">2</field>
+            <field name="active">True</field>
+            <field name="is_featured">False</field>
+            <field name="is_best_seller">False</field>
+            <field name="packaging_ids" eval="[(4, ref('packaging_plastic'))]"/>
+            <field name="excluded_part_ids" eval="[(4, ref('excluded_wood'))]"/>
+        </record>
+
+        <!-- ==================== PRODUCT IMAGES ==================== -->
+        <record id="product_image_laptop_1" model="jabin.product.image">
+            <field name="product_id" ref="product_laptop"/>
+            <field name="sequence">10</field>
+        </record>
+
+        <record id="product_image_phone_1" model="jabin.product.image">
+            <field name="product_id" ref="product_phone"/>
+            <field name="sequence">10</field>
+        </record>
+
+        <record id="product_image_shirt_1" model="jabin.product.image">
+            <field name="product_id" ref="product_shirt"/>
+            <field name="sequence">10</field>
+        </record>
+
+        <record id="product_image_pizza_1" model="jabin.product.image">
+            <field name="product_id" ref="product_pizza"/>
+            <field name="sequence">10</field>
+        </record>
+
+        <record id="product_image_table_1" model="jabin.product.image">
+            <field name="product_id" ref="product_table"/>
+            <field name="sequence">10</field>
+        </record>
+
+        <record id="product_image_notebook_1" model="jabin.product.image">
+            <field name="product_id" ref="product_notebook"/>
+            <field name="sequence">10</field>
+        </record>
+
+        <record id="product_image_headphones_1" model="jabin.product.image">
+            <field name="product_id" ref="product_headphones"/>
+            <field name="sequence">10</field>
+        </record>
+
+        <record id="product_image_coffee_1" model="jabin.product.image">
+            <field name="product_id" ref="product_coffee"/>
+            <field name="sequence">10</field>
+        </record>
+
+        <record id="product_image_sofa_1" model="jabin.product.image">
+            <field name="product_id" ref="product_sofa"/>
+            <field name="sequence">10</field>
+        </record>
+
+        <record id="product_image_mouse_1" model="jabin.product.image">
+            <field name="product_id" ref="product_mouse"/>
+            <field name="sequence">10</field>
+        </record>
+
+        <record id="product_image_dress_1" model="jabin.product.image">
+            <field name="product_id" ref="product_dress"/>
+            <field name="sequence">10</field>
+        </record>
+
+        <record id="product_image_watch_1" model="jabin.product.image">
+            <field name="product_id" ref="product_watch"/>
+            <field name="sequence">10</field>
+        </record>
+
+        <record id="product_image_chair_1" model="jabin.product.image">
+            <field name="product_id" ref="product_chair"/>
+            <field name="sequence">10</field>
+        </record>
+
+        <!-- ==================== DASHBOARD SETTINGS ==================== -->
         <record id="dashboard_settings_default" model="jabin.dashboard.setting">
             <field name="dashboard_layout">grid</field>
             <field name="show_kpi">True</field>

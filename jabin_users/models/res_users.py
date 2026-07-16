@@ -40,20 +40,103 @@ class ResUsers(models.Model):
 
     last_login = fields.Datetime(string='Last Login')
 
+    # --- Custom Relationships ---
+    order_ids = fields.One2many('jabin.order', 'customer_id', string='All Orders')
+    active_order_ids = fields.One2many('jabin.order', 'customer_id', compute='_compute_filtered_orders', string='Active Orders')
+    previous_order_ids = fields.One2many('jabin.order', 'customer_id', compute='_compute_filtered_orders', string='Previous Orders')
+    cancelled_order_ids = fields.One2many('jabin.order', 'customer_id', compute='_compute_filtered_orders', string='Cancelled Orders')
+    refunded_order_ids = fields.One2many('jabin.order', 'customer_id', compute='_compute_filtered_orders', string='Refunded Orders')
+    payment_transaction_ids = fields.One2many('jabin.payment.transaction', 'customer_id', string='Payment Transactions')
+    activity_ids = fields.One2many('jabin.customer.activity', 'user_id', string='Customer Activities')
+
+    # --- Financial & Activity Metrics ---
+    total_orders_count = fields.Integer(string='Total Orders', compute='_compute_financial_metrics')
+    total_spending = fields.Monetary(string='Total Spending', compute='_compute_financial_metrics', currency_field='currency_id')
+    total_refunds = fields.Monetary(string='Total Refunds', compute='_compute_financial_metrics', currency_field='currency_id')
+    pending_payments_count = fields.Integer(string='Pending Payments Count', compute='_compute_financial_metrics')
+    completed_payments_count = fields.Integer(string='Completed Payments Count', compute='_compute_financial_metrics')
+    preferred_payment_method_id = fields.Many2one('jabin.payment.method', string='Preferred Payment Method', compute='_compute_financial_metrics')
+    average_order_value = fields.Monetary(string='Average Order Value', compute='_compute_financial_metrics', currency_field='currency_id')
+    last_payment_date = fields.Datetime(string='Last Payment Date', compute='_compute_financial_metrics')
+    last_activity_date = fields.Datetime(string='Last Activity Date', compute='_compute_last_activity_date')
+
     # avatar is replaced by image_1920 from res.users
 
-    # --- Override create to set default values ---
+    # --- Computed Methods ---
+    def _compute_filtered_orders(self):
+        for user in self:
+            user.active_order_ids = user.order_ids.filtered(lambda o: o.state not in ('delivered', 'cancelled', 'refunded'))
+            user.previous_order_ids = user.order_ids.filtered(lambda o: o.state == 'delivered')
+            user.cancelled_order_ids = user.order_ids.filtered(lambda o: o.state == 'cancelled')
+            user.refunded_order_ids = user.order_ids.filtered(lambda o: o.state == 'refunded')
+
+    @api.depends('order_ids.state', 'order_ids.total', 'order_ids.payment_status', 
+                 'payment_transaction_ids.status', 'payment_transaction_ids.payment_method_id')
+    def _compute_financial_metrics(self):
+        for user in self:
+            orders = user.order_ids
+            user.total_orders_count = len(orders)
+            paid_orders = orders.filtered(lambda o: o.state != 'cancelled' and o.payment_status == 'paid')
+            user.total_spending = sum(paid_orders.mapped('total'))
+            refunded_orders = orders.filtered(lambda o: o.state == 'refunded')
+            user.total_refunds = sum(refunded_orders.mapped('total'))
+
+            if user.total_orders_count > 0:
+                user.average_order_value = user.total_spending / user.total_orders_count
+            else:
+                user.average_order_value = 0.0
+
+            transactions = user.payment_transaction_ids
+            user.pending_payments_count = len(transactions.filtered(lambda t: t.status == 'pending'))
+            user.completed_payments_count = len(transactions.filtered(lambda t: t.status == 'paid'))
+
+            paid_txs = transactions.filtered(lambda t: t.status == 'paid' and t.paid_date)
+            user.last_payment_date = max(paid_txs.mapped('paid_date')) if paid_txs else False
+
+            successful_txs = transactions.filtered(lambda t: t.status == 'paid')
+            if successful_txs:
+                method_counts = {}
+                for tx in successful_txs:
+                    method_counts[tx.payment_method_id] = method_counts.get(tx.payment_method_id, 0) + 1
+                preferred = max(method_counts, key=method_counts.get)
+                user.preferred_payment_method_id = preferred.id
+            else:
+                user.preferred_payment_method_id = False
+
+    @api.depends('activity_ids.timestamp')
+    def _compute_last_activity_date(self):
+        for user in self:
+            user.last_activity_date = max(user.activity_ids.mapped('timestamp')) if user.activity_ids else False
+
+    def log_activity(self, action, related_record=None):
+        self.ensure_one()
+        self.env['jabin.customer.activity'].sudo().create({
+            'user_id': self.id,
+            'action': action,
+            'related_record': related_record,
+            'timestamp': fields.Datetime.now()
+        })
+
+    # --- Override create and write to set defaults & log activities ---
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
-            # Ensure login is set from email if not provided
             if 'email' in vals and 'login' not in vals:
                 vals['login'] = vals['email']
-            # Ensure partner email is set
-            if 'email' in vals and 'partner_id' not in vals:
-                # Partner will be created automatically with email
-                pass
-        return super().create(vals_list)
+        users = super().create(vals_list)
+        for user in users:
+            if user.user_type in ('individual', 'business'):
+                user.log_activity('registered', related_record=f'res.users,{user.id}')
+        return users
+
+    def write(self, vals):
+        profile_fields = {'name', 'email', 'login', 'phone', 'user_type', 'image_1920'}
+        res = super().write(vals)
+        if any(f in vals for f in profile_fields):
+            for user in self:
+                if user.user_type in ('individual', 'business'):
+                    user.log_activity('updated_profile', related_record=f'res.users,{user.id}')
+        return res
 
     # --- Helper Methods (adapted from res.users) ---
     @api.model

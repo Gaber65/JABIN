@@ -32,6 +32,8 @@
         'views/excluded_part_views.xml',
         'views/banner_views.xml',
 
+        'views/order_views.xml',   # Orders, Payments, Activity views + their actions
+
         'views/actions.xml',  # Load after all views are defined
         'views/menus.xml',  # Load after all actions are defined
     ],

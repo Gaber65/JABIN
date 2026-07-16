@@ -13,6 +13,19 @@
     <menuitem id="menu_jabin_users_list" name="All Users" parent="menu_jabin_users_root" action="action_jabin_users"
               sequence="10"/>
 
+    <menuitem id="menu_jabin_orders_root" name="Orders" parent="menu_jabin_root" sequence="27"/>
+    <menuitem id="menu_jabin_orders_all" name="All Orders" parent="menu_jabin_orders_root"
+              action="action_jabin_orders" sequence="10"/>
+
+    <menuitem id="menu_jabin_payments_root" name="Payments" parent="menu_jabin_root" sequence="28"/>
+    <menuitem id="menu_jabin_payment_transactions" name="Transactions" parent="menu_jabin_payments_root"
+              action="action_jabin_payment_transactions" sequence="10"/>
+    <menuitem id="menu_jabin_payment_methods" name="Payment Methods" parent="menu_jabin_payments_root"
+              action="action_jabin_payment_methods" sequence="20"/>
+
+    <menuitem id="menu_jabin_activity_logs" name="Activity Logs" parent="menu_jabin_root"
+              action="action_jabin_customer_activities" sequence="29"/>
+
     <menuitem id="menu_jabin_configuration" name="Configuration" parent="menu_jabin_root" sequence="30"
               groups="base.group_system"/>
     <menuitem id="menu_jabin_cutting_option" name="Cutting Options" parent="menu_jabin_configuration"
